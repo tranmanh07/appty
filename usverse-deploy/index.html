@@ -1,0 +1,3233 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        iframe, [title*="Netlify" i], [title*="Powered by" i], #netlify-drawer, [data-netlify-drawer],
+        a[href*="netlify"], div[class*="netlify"], [id*="netlify"], [class*="netlify"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            position: absolute !important;
+            top: -99999px !important;
+            left: -99999px !important;
+            width: 0 !important;
+            height: 0 !important;
+            z-index: -99999999 !important;
+        }
+    </style>
+    <script>
+        // CHẶN TRIỆT ĐỂ 100% TOÀN BỘ NETLIFY HUD / BADGE / IFRAME
+        (function() {
+            const isBad = (node) => {
+                if (!node || !node.tagName) return false;
+                const tag = node.tagName.toUpperCase();
+                if (tag === 'IFRAME') return true;
+                if (tag === 'SCRIPT' && (node.src || '').includes('hud')) return true;
+                // Chặn badge "Powered by Netlify"
+                const text = (node.textContent || '').toLowerCase();
+                if (text.includes('netlify') || text.includes('powered by')) return true;
+                const href = (node.href || '').toLowerCase();
+                if (href.includes('netlify.com')) return true;
+                return false;
+            };
+            const origAppend = Element.prototype.appendChild;
+            Element.prototype.appendChild = function(child) {
+                if (isBad(child)) return child;
+                return origAppend.apply(this, arguments);
+            };
+            const origInsert = Element.prototype.insertBefore;
+            Element.prototype.insertBefore = function(child, ref) {
+                if (isBad(child)) return child;
+                return origInsert.apply(this, arguments);
+            };
+            new MutationObserver(ms => {
+                for (const m of ms) {
+                    for (const n of m.addedNodes) {
+                        if (isBad(n)) { try { n.remove(); } catch(e) {} }
+                    }
+                }
+            }).observe(document.documentElement, { childList: true, subtree: true });
+            setInterval(() => {
+                document.querySelectorAll('iframe, script[src*="hud"], #netlify-drawer, a[href*="netlify.com"], div[class*="netlify"], [id*="netlify"]').forEach(el => {
+                    if (el.textContent && (el.textContent.toLowerCase().includes('netlify') || el.textContent.toLowerCase().includes('powered by'))) {
+                        el.remove();
+                    }
+                });
+            }, 60);
+        })();
+    </script>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#090b10">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="UsVerse">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <title>UsVerse — Không Gian Cặp Đôi Riêng Tư</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="h-[100dvh] w-screen flex items-center justify-center md:p-4">
+
+    <!-- NÚT TIỆN ÍCH TRÊN MÁY TÍNH (DESKTOP) ĐỂ MỞ CỬA SỔ ĐÔI & CÀI APP -->
+    <div
+        class="hidden lg:flex flex-col gap-2 fixed top-6 right-6 z-50 bg-slate-900/90 border border-slate-800 p-3.5 rounded-3xl shadow-2xl backdrop-blur max-w-[240px]">
+        <div class="flex items-center gap-2">
+            <span id="sync-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span class="text-xs font-extrabold text-white">UsVerse App Engine</span>
+        </div>
+        <p class="text-[10px] text-slate-400 leading-relaxed">
+            Mở thêm 1 cửa sổ nữa và chọn vai kia để test nhắn tin, bắn tín hiệu & Locket 2 chiều theo thời gian thực!
+        </p>
+        <button type="button" onclick="window.open(window.location.href, '_blank', 'width=420,height=840')"
+            class="w-full py-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:opacity-95 text-white rounded-xl text-[11px] font-extrabold shadow">
+            📱 Mở Máy Thứ 2 (Cửa sổ đôi)
+        </button>
+        <button type="button" onclick="openCloudConfigModal(); playAppSound('pop');"
+            class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-xl text-[10px] font-bold">
+            ☁️ Cài đặt Cloud (2 Điện thoại)
+        </button>
+        <button type="button" id="pwa-install-btn" onclick="installPWAApp()"
+            class="hidden w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-extrabold shadow">
+            📲 Cài App Vào Thiết Bị
+        </button>
+    </div>
+
+    <!-- ================= KHUNG ỨNG DỤNG CHÍNH (FULL MÀN HÌNH TRÊN ĐIỆN THOẠI) ================= -->
+    <div id="phone-frame"
+        class="w-full h-[100dvh] md:w-[400px] md:h-[820px] bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50 md:rounded-[52px] p-3 md:shadow-2xl md:shadow-rose-500/20 md:border-[6px] md:border-slate-900 flex flex-col relative overflow-hidden text-slate-800 select-none">
+
+        <!-- TOAST SNACKBAR -->
+        <div id="toast-box"
+            class="absolute top-12 left-1/2 -translate-x-1/2 z-[75] pointer-events-none opacity-0 -translate-y-4 transition-all duration-300 w-[90%]">
+            <div
+                class="bg-slate-900/95 backdrop-blur text-white px-3.5 py-2.5 rounded-2xl shadow-xl border border-pink-500/40 flex items-center gap-2 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+                <span id="toast-text" class="truncate">Thông báo!</span>
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <div id="app-top-header" class="flex items-center justify-between px-2 pt-1 pb-2 z-30">
+            <button type="button" onclick="toggleDrawer(true); playAppSound('pop');"
+                class="p-2 rounded-xl glass-card hover-lift text-slate-700" title="Menu & Cài đặt">
+                <i data-lucide="menu" class="w-4 h-4 pointer-events-none"></i>
+            </button>
+
+            <div onclick="toggleRadioPlay();"
+                class="w-52 h-7 bg-slate-950 text-white rounded-full px-3 flex items-center gap-2 shadow-md cursor-pointer hover:scale-105 transition">
+                <span id="island-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                <div class="marquee-container text-[10px] font-bold text-pink-200">
+                    <div id="island-marquee" class="marquee-track">
+                        📻 UsVerse Radio • Thêm bài hát ở mục Radio nhé • &nbsp;&nbsp;&nbsp;
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" onclick="open2010GiftModal(); playAppSound('success');"
+                class="p-2 rounded-xl glass-card hover-lift text-rose-600 flex items-center gap-1"
+                title="Hộp quà 20/10">
+                <i data-lucide="gift" class="w-4 h-4 pointer-events-none"></i>
+            </button>
+        </div>
+
+        <!-- ================= VÙNG NỘI DUNG CHÍNH ================= -->
+        <div id="app-viewport" class="flex-1 overflow-y-auto px-2 pb-24 space-y-2.5">
+
+            <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
+            <div id="view-guest-auth" class="space-y-3 hidden pt-4">
+                <div class="text-center space-y-1 pb-1">
+                    <div
+                        class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-rose-500 to-amber-400 text-white flex items-center justify-center mx-auto shadow-lg text-3xl font-black">
+                        💞
+                    </div>
+                    <h2 class="text-lg font-black text-slate-800 tracking-tight">UsVerse App</h2>
+                    <p class="text-xs text-slate-500">Không gian riêng tư kết nối trực tiếp hai bạn</p>
+                </div>
+
+                <div
+                    class="glass-card p-1.5 rounded-2xl grid grid-cols-2 gap-1 text-xs font-extrabold text-center shadow-sm">
+                    <button type="button" onclick="switchGuestTab('login'); playAppSound('pop');" id="guest-tab-login"
+                        class="py-2 rounded-xl bg-rose-500 text-white shadow transition">Đăng Nhập</button>
+                    <button type="button" onclick="switchGuestTab('register'); playAppSound('pop');"
+                        id="guest-tab-register" class="py-2 rounded-xl text-slate-600 hover:bg-pink-50 transition">Tạo
+                        TK Mới</button>
+                </div>
+
+                <div id="guest-box-login" class="glass-card p-4 rounded-3xl space-y-3 shadow-md">
+                    <div class="space-y-2.5 text-xs">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-600">Email đăng nhập</label>
+                            <input id="login-email" type="email" placeholder="Nhập email đăng nhập"
+                                class="w-full mt-0.5 px-3 py-2.5 rounded-xl bg-white border border-pink-200 font-semibold focus:outline-none focus:ring-2 focus:ring-rose-400">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center">
+                                <label class="text-[10px] font-bold text-slate-600">Mật khẩu</label>
+                                <button type="button" onclick="handleForgotPassword(); playAppSound('pop');"
+                                    class="text-[10px] font-extrabold text-rose-600 hover:underline">Quên mật
+                                    khẩu?</button>
+                            </div>
+                            <div class="relative mt-0.5">
+                                <input id="login-pass" type="password" placeholder="Nhập mật khẩu"
+                                    class="w-full pl-3 pr-9 py-2.5 rounded-xl bg-white border border-pink-200 font-semibold focus:outline-none focus:ring-2 focus:ring-rose-400">
+                                <button type="button" onclick="togglePasswordVisibility()"
+                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-600 text-xs font-bold"
+                                    id="eye-btn">👁️</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="forgot-pw-box"
+                        class="hidden bg-amber-50 border border-amber-200 p-2.5 rounded-2xl space-y-1.5">
+                        <div class="text-[10px] font-extrabold text-amber-800">🔑 Nhập mã OTP (2010) & Mật khẩu mới:
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <input id="otp-input" type="text" placeholder="Mã OTP (2010)"
+                                class="px-2.5 py-1.5 rounded-lg bg-white border border-amber-300 text-xs font-bold">
+                            <input id="new-reset-pass" type="text" placeholder="Mật khẩu mới"
+                                class="px-2.5 py-1.5 rounded-lg bg-white border border-amber-300 text-xs font-bold">
+                        </div>
+                        <button type="button" onclick="confirmResetPassword();"
+                            class="w-full py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-extrabold">Xác Nhận
+                            Đặt Lại Mật Khẩu</button>
+                    </div>
+
+                    <div class="bg-pink-50/80 p-2.5 rounded-2xl border border-pink-200/70">
+                        <div class="text-[10px] font-extrabold text-rose-700 mb-1.5">⚡ Đăng nhập nhanh (nếu đã có tài khoản):
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="quickLoginAsRole('boy');"
+                                class="py-2 bg-white rounded-xl border border-pink-200 text-[11px] font-extrabold text-slate-700 hover:border-rose-500 shadow-sm">
+                                👦🏻 Máy của Anh
+                            </button>
+                            <button type="button" onclick="quickLoginAsRole('girl');"
+                                class="py-2 bg-white rounded-xl border border-pink-200 text-[11px] font-extrabold text-slate-700 hover:border-rose-500 shadow-sm">
+                                👧🏻 Máy của Em
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="handleLoginSubmit();"
+                        class="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl text-xs font-extrabold shadow-md hover-lift">
+                        🔓 Đăng Nhập Vào Không Gian Chung
+                    </button>
+                </div>
+
+                <div id="guest-box-register" class="glass-card p-4 rounded-3xl space-y-3 hidden shadow-md">
+                    <div class="space-y-2 text-xs">
+                        <input id="reg-name" type="text" placeholder="Biệt danh của bạn (VD: Quang Mạnh / Công Chúa)"
+                            class="w-full px-3 py-2.5 rounded-xl bg-white border border-pink-200 font-semibold">
+                        <input id="reg-email" type="email" placeholder="Email đăng nhập"
+                            class="w-full px-3 py-2.5 rounded-xl bg-white border border-pink-200 font-semibold">
+                        <input id="reg-pass" type="password" placeholder="Tạo mật khẩu (>= 6 ký tự)"
+                            class="w-full px-3 py-2.5 rounded-xl bg-white border border-pink-200 font-semibold">
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <label
+                                class="flex items-center justify-center gap-1.5 p-2.5 bg-blue-50 border border-blue-200 rounded-xl font-bold text-blue-700 cursor-pointer">
+                                <input type="radio" name="reg-role" value="boy" checked> 👦🏻 Vai Bạn Nam
+                            </label>
+                            <label
+                                class="flex items-center justify-center gap-1.5 p-2.5 bg-pink-50 border border-pink-200 rounded-xl font-bold text-rose-700 cursor-pointer">
+                                <input type="radio" name="reg-role" value="girl"> 👧🏻 Vai Bạn Nữ
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="handleRegisterSubmit();"
+                        class="w-full py-3 bg-gradient-to-r from-rose-500 to-amber-500 text-white rounded-xl text-xs font-extrabold shadow-md hover-lift">
+                        ✨ Lưu Tài Khoản & Vào Ghép Đôi ➔
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 1: NHÀ & PET -->
+            <div id="view-home" class="space-y-2.5">
+                <div class="glass-card p-2 rounded-2xl flex items-center justify-between shadow-sm">
+                    <div
+                        class="flex items-center gap-1 bg-orange-500/10 px-2.5 py-1 rounded-full border border-orange-500/20">
+                        <span class="text-xs">🔥</span>
+                        <span id="streak-count-badge" class="text-[11px] font-extrabold text-orange-600">0 Ngày</span>
+                    </div>
+
+                    <button type="button" onclick="openShopModal(); playAppSound('pop');"
+                        class="flex items-center gap-1 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 py-1 rounded-full border border-amber-500/30 text-[11px] font-extrabold text-amber-800 transition">
+                        <span>🪙 <span id="coin-count">0</span> Xu</span>
+                        <span class="bg-amber-500 text-white px-1.5 rounded-full text-[9px]">+Shop</span>
+                    </button>
+
+                    <button type="button" onclick="switchTab('penalty'); playAppSound('pop');"
+                        class="flex items-center gap-1 bg-purple-500/15 px-2 py-1 rounded-full border border-purple-400/30 text-[10px] font-extrabold text-purple-700">
+                        <span>😤 Dỗi/Phạt: <b id="home-active-grudges">0</b></span>
+                    </button>
+                </div>
+
+                <div onclick="openEditAnniversaryModal(); playAppSound('pop');"
+                    class="hover-lift bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 text-white p-3 rounded-3xl shadow-lg cursor-pointer"
+                    title="Bấm để chỉnh ngày bắt đầu yêu">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="relative w-10 h-10 rounded-2xl overflow-hidden border-2 border-white/90 shadow-md shrink-0 bg-white/20">
+                                <img src="./icons/avatar-app.png" alt="Couple Avatar" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex -space-x-1 items-center">
+                                <div id="home-boy-avatar"
+                                    class="w-6 h-6 rounded-full bg-white/30 border border-white flex items-center justify-center text-[10px]">
+                                    👦🏻</div>
+                                <div id="home-girl-avatar"
+                                    class="w-6 h-6 rounded-full bg-white/30 border border-white flex items-center justify-center text-[10px]">
+                                    👧🏻</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div id="love-days-title" class="text-xs font-black tracking-wide uppercase text-shimmer">
+                                0 NGÀY BÊN NHAU</div>
+                            <div id="love-time-detail" class="text-[10px] text-white/95 font-mono">00 Năm • 00 Tháng •
+                                00 Ngày • 00s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-1.5 rounded-2xl flex items-center justify-between text-[11px] font-bold">
+                    <span class="pl-2 text-slate-500">Mood:</span>
+                    <div class="flex bg-pink-100/70 p-0.5 rounded-xl gap-1">
+                        <button type="button" onclick="changeMood('🥰 Đang yêu đời'); playAppSound('pop');"
+                            data-mood="🥰 Đang yêu đời"
+                            class="mood-btn px-2 py-1 rounded-lg bg-white shadow-sm text-rose-600">🥰 Yêu</button>
+                        <button type="button" onclick="changeMood('😋 Đói bụng quá'); playAppSound('pop');"
+                            data-mood="😋 Đói bụng quá" class="mood-btn px-2 py-1 rounded-lg text-slate-600">😋
+                            Đói</button>
+                        <button type="button" onclick="changeMood('🥺 Đang nhớ ấy'); playAppSound('pop');"
+                            data-mood="🥺 Đang nhớ ấy" class="mood-btn px-2 py-1 rounded-lg text-slate-600">🥺
+                            Nhớ</button>
+                        <button type="button" onclick="changeMood('😤 Đang dỗi đấy'); playAppSound('pop');"
+                            data-mood="😤 Đang dỗi đấy" class="mood-btn px-2 py-1 rounded-lg text-slate-600">😤
+                            Dỗi</button>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-gradient-to-b from-orange-100/80 via-pink-100/70 to-rose-100/80 rounded-3xl p-3 border border-white shadow-inner flex flex-col items-center">
+                    <div class="w-full flex justify-between items-center">
+                        <span id="current-mood-badge"
+                            class="bg-white/80 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold text-rose-600 shadow-sm">🥰
+                            Đang yêu đời</span>
+                        <button type="button" onclick="openShopModal(); playAppSound('pop');"
+                            class="bg-amber-500 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold shadow hover:bg-amber-600">
+                            🍖 Cho ăn / Mua đồ
+                        </button>
+                    </div>
+
+                    <div
+                        class="glass-card px-3 py-1 rounded-2xl rounded-bl-none shadow-sm text-[11px] font-bold text-slate-700 my-1 min-h-[24px] flex items-center">
+                        <span id="typewriter-text">"Meow~ Chào mừng đến UsVerse!"</span>
+                        <span class="w-1 h-3.5 bg-rose-500 ml-1 animate-pulse"></span>
+                    </div>
+
+                    <div id="pet-avatar" onclick="petInteract();"
+                        class="text-5xl my-1 animate-float cursor-pointer select-none"
+                        title="Bấm để xoa đầu Mochi (+5% Vui)">🐱</div>
+
+                    <div class="w-full grid grid-cols-2 gap-2 mt-1 glass-card p-2 rounded-2xl">
+                        <div class="flex items-center gap-2">
+                            <div class="w-9 h-9 rounded-full border-4 border-orange-400 flex items-center justify-center text-[10px] font-black text-orange-600"
+                                id="txt-hunger">50%</div>
+                            <div>
+                                <div class="text-[10px] font-extrabold">Độ No</div>
+                                <div class="text-[9px] text-slate-500" id="pet-level-txt">Mochi Lv.1</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-9 h-9 rounded-full border-4 border-rose-500 flex items-center justify-center text-[10px] font-black text-rose-600"
+                                id="txt-happy">50%</div>
+                            <div>
+                                <div class="text-[10px] font-extrabold">Độ Vui</div>
+                                <div class="text-[9px] text-slate-500" id="pet-exp-txt">EXP: 0/100</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1 px-1">
+                        <span class="text-[10px] font-extrabold text-slate-500 uppercase">⚡ Bắn tín hiệu sang máy người
+                            yêu</span>
+                        <button type="button" onclick="openCustomSignalModal(); playAppSound('pop');"
+                            class="text-[10px] font-extrabold text-rose-600 underline">+ Tự nhập yêu cầu</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button type="button"
+                            onclick="triggerSignal('Đút Trà Sữa 🧋', 'Mua cho em 1 ly Ô long nhài sữa ít đá nhé!'); playAppSound('pop');"
+                            class="hover-lift glass-card p-2 rounded-2xl flex flex-col items-center gap-1 border border-amber-200">
+                            <span class="text-base">🧋</span>
+                            <span class="text-[10px] font-extrabold text-amber-900">Đút trà sữa</span>
+                        </button>
+                        <button type="button"
+                            onclick="triggerSignal('Đòi Ôm Ngay 🤗', 'Người yêu đang cần 1 cái ôm thật chặt!'); playAppSound('pop');"
+                            class="hover-lift glass-card p-2 rounded-2xl flex flex-col items-center gap-1 border border-rose-200">
+                            <span class="text-base">🤗</span>
+                            <span class="text-[10px] font-extrabold text-rose-900">Đòi ôm ngay</span>
+                        </button>
+                        <button type="button" onclick="switchTab('penalty'); playAppSound('pop');"
+                            class="hover-lift bg-purple-50 p-2 rounded-2xl flex flex-col items-center gap-1 border-2 border-purple-300">
+                            <span class="text-base">😤⚖️</span>
+                            <span class="text-[10px] font-extrabold text-purple-900">Ghi Sổ Dỗi/Phạt</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RADIO PLAYLIST -->
+                <div class="bg-slate-900 text-white p-2.5 rounded-3xl shadow-md border border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between gap-1">
+                        <div id="radio-pills-container"
+                            class="flex items-center gap-1 overflow-x-auto pb-1 text-[9px] font-extrabold"></div>
+                        <button type="button" onclick="openAddRadioModal(); playAppSound('pop');"
+                            class="shrink-0 px-2 py-1 bg-amber-500 text-slate-950 rounded-full text-[9px] font-black">+
+                            Thêm mốc</button>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div id="vinyl-disc"
+                                class="w-9 h-9 shrink-0 rounded-full bg-gradient-to-tr from-rose-500 to-amber-400 p-0.5">
+                                <div
+                                    class="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-xs">
+                                    💿</div>
+                            </div>
+                            <div class="truncate">
+                                <div id="radio-slot-label" class="text-[9px] text-rose-400 font-extrabold uppercase">📻
+                                    Chưa có bài phát</div>
+                                <div id="radio-track-title" class="text-[11px] font-bold truncate">Thêm bài hát ở mục
+                                    Radio nhé 🎵</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button" onclick="prevRadioTrack(); playAppSound('pop');"
+                                class="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-[10px] flex items-center justify-center">◀</button>
+                            <button type="button" onclick="toggleRadioPlay();" id="radio-play-btn"
+                                class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold shadow">▶</button>
+                            <button type="button" onclick="nextRadioTrack(); playAppSound('pop');"
+                                class="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-[10px] flex items-center justify-center">▶</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: LOCKET CAM -->
+            <div id="view-locket" class="space-y-3 hidden">
+                <div class="bg-slate-950 text-white p-3 rounded-3xl space-y-2.5 shadow-xl">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-extrabold text-pink-400">📸 Locket Cam</span>
+                            <button type="button" onclick="toggleRealCamera(); playAppSound('pop');" id="btn-cam-power"
+                                class="text-[9px] bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 px-2 py-0.5 rounded-full font-extrabold">
+                                🎥 Bật Cam Thật
+                            </button>
+                        </div>
+                        <select id="locket-frame-select" onchange="updateLocketFrameStyle();"
+                            class="bg-slate-800 text-amber-300 text-[10px] font-bold px-2 py-1 rounded-full border border-slate-700 focus:outline-none">
+                            <option value="✨ Lễ 20/10">✨ Khung: Lễ 20/10</option>
+                            <option value="💖 Trái Tim">💖 Khung: Trái Tim Hồng</option>
+                            <option value="🏔️ Tam Đảo">🏔️ Khung: Phượt Tam Đảo</option>
+                        </select>
+                    </div>
+
+                    <div id="locket-viewfinder"
+                        class="aspect-square rounded-2xl border-4 border-pink-400 bg-gradient-to-tr from-rose-900 via-slate-900 to-amber-900/60 overflow-hidden relative flex flex-col justify-between p-3 transition-all">
+                        <video id="locket-video" autoplay playsinline muted
+                            class="absolute inset-0 w-full h-full object-cover hidden mirror-video z-0"></video>
+                        <img id="locket-uploaded-preview" class="absolute inset-0 w-full h-full object-cover hidden z-0"
+                            alt="Preview">
+                        <canvas id="locket-canvas" width="480" height="480" class="hidden"></canvas>
+
+                        <div class="flex justify-between items-center relative z-10">
+                            <span id="locket-frame-live-badge"
+                                class="bg-rose-500/80 backdrop-blur px-2.5 py-0.5 rounded-full text-[9px] font-extrabold">💖
+                                Khung Trái Tim</span>
+                            <div class="flex items-center gap-1">
+                                <span
+                                    class="bg-black/55 backdrop-blur border border-white/15 px-2 py-0.5 rounded-full text-[9px] text-rose-100 font-bold"
+                                    id="cam-facing-label">📱 Cam trước</span>
+                                <button type="button" id="btn-clear-uploaded"
+                                    onclick="clearUploadedLocketImage(); playAppSound('pop');"
+                                    class="hidden bg-rose-600 text-white px-2 py-0.5 rounded-full text-[9px] font-extrabold">✖
+                                    Gỡ ảnh</button>
+                            </div>
+                        </div>
+
+                        <div id="locket-placeholder" class="text-center my-auto relative z-10 space-y-1.5">
+                            <div id="locket-preview-emoji" class="text-6xl mb-1 transition-transform">👩‍❤️‍👨</div>
+                            <div class="flex flex-col gap-1 items-center">
+                                <button type="button" onclick="startCameraStream(); playAppSound('pop');"
+                                    class="px-3 py-1 bg-rose-500/80 hover:bg-rose-500 backdrop-blur rounded-full text-[10px] font-extrabold text-white shadow">
+                                    📸 Mở Camera Trực Tiếp
+                                </button>
+                                <button type="button"
+                                    onclick="document.getElementById('locket-file-input').click(); playAppSound('pop');"
+                                    class="px-3 py-1 bg-white/15 hover:bg-white/25 backdrop-blur rounded-full text-[10px] font-bold text-pink-200 border border-white/20">
+                                    🖼️ Chọn ảnh từ Thiết bị
+                                </button>
+                            </div>
+                        </div>
+
+                        <input id="locket-caption-input" type="text" placeholder="Nhập caption chạy ngang ảnh..."
+                            class="relative z-10 w-full bg-black/65 backdrop-blur py-1.5 px-3 rounded-xl text-center text-xs font-bold text-white border border-white/20 focus:outline-none focus:border-pink-400"
+                            placeholder="Nhập caption chạy ngang ảnh...">
+                    </div>
+
+                    <input id="locket-file-input" type="file" accept="image/*" class="hidden"
+                        onchange="handleGalleryUpload(event)">
+
+                    <div class="flex items-center justify-around py-1">
+                        <button type="button"
+                            onclick="document.getElementById('locket-file-input').click(); playAppSound('pop');"
+                            class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-200 flex items-center gap-1 px-3">
+                            <span class="text-xs">🖼️</span>
+                            <span class="text-[9px] font-bold">Thư viện</span>
+                        </button>
+
+                        <button type="button" onclick="captureAndSendLocket(); playAppSound('shutter');"
+                            class="w-14 h-14 rounded-full p-1 border-4 border-pink-400 flex items-center justify-center hover:scale-105 active:scale-90 transition shadow-lg shadow-pink-500/30">
+                            <div
+                                class="w-full h-full bg-white rounded-full flex items-center justify-center text-rose-600 font-black text-[10px]">
+                                CHỤP</div>
+                        </button>
+
+                        <button type="button" onclick="flipCamera(); playAppSound('pop');"
+                            class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-200 flex items-center gap-1 px-3">
+                            <span class="text-xs">🔄</span>
+                            <span class="text-[9px] font-bold">Đổi Cam</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-xs font-extrabold text-slate-700 mb-2 flex justify-between px-1">
+                        <span>🎞️ Tường Ảnh Kỷ Niệm (<span id="locket-total-count">1</span>)</span>
+                        <span class="text-[10px] text-rose-500">Bấm ảnh phóng to & Tải về</span>
+                    </div>
+                    <div id="locket-masonry" class="masonry-grid"></div>
+                </div>
+            </div>
+
+            <!-- TAB 3: CHAT & CALL -->
+            <div id="view-chat"
+                class="hidden h-[calc(100dvh-160px)] md:h-[600px] flex flex-col justify-between glass-card rounded-3xl p-3">
+                <div class="flex items-center justify-between border-b border-pink-100 pb-2">
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="relative w-9 h-9 rounded-full bg-rose-200 flex items-center justify-center text-base">
+                            <span id="chat-partner-avatar">👧🏻</span>
+                            <span
+                                class="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white absolute bottom-0 right-0"></span>
+                        </div>
+                        <div>
+                            <div id="chat-partner-name" class="text-xs font-extrabold text-slate-800">Công Chúa ❤️</div>
+                            <div class="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                                <span id="chat-sync-label">Trực tuyến • Đồng bộ Real-time</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button type="button" onclick="openCallModal('audio'); playAppSound('pop');"
+                            class="p-2 bg-pink-50 hover:bg-pink-100 text-rose-600 rounded-full text-xs"
+                            title="Gọi thoại">📞</button>
+                        <button type="button" onclick="openCallModal('video'); playAppSound('pop');"
+                            class="p-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow text-xs"
+                            title="Gọi Video">🎥</button>
+                    </div>
+                </div>
+
+                <div id="chat-list" class="flex-1 overflow-y-auto py-2.5 space-y-2.5 text-xs pr-1"></div>
+
+                <div id="typing-indicator-bubble" class="hidden flex items-center gap-2 py-1 px-2">
+                    <span id="typing-partner-avatar" class="text-xs">👧🏻</span>
+                    <div
+                        class="bg-pink-100/90 border border-pink-200 px-3 py-1.5 rounded-2xl rounded-bl-none flex items-center gap-1">
+                        <span id="typing-partner-name" class="text-[10px] font-bold text-rose-600 mr-1">Đối phương đang
+                            gõ</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 typing-dot"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 typing-dot"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 typing-dot"></span>
+                    </div>
+                </div>
+
+                <input id="chat-photo-input" type="file" accept="image/*" class="hidden"
+                    onchange="handleChatPhotoUpload(event)">
+
+                <div class="pt-2 border-t border-pink-100 space-y-1.5">
+                    <button type="button" id="btn-record-voice" onmousedown="startRealVoiceRecording(event)"
+                        onmouseup="stopRealVoiceRecording(event)" onmouseleave="stopRealVoiceRecording(event)"
+                        ontouchstart="startRealVoiceRecording(event)" ontouchend="stopRealVoiceRecording(event)"
+                        class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 shadow transition">
+                        <span id="record-btn-text">🎤 Giữ để thu âm giọng nói thật</span>
+                    </button>
+
+                    <div class="flex items-center gap-1">
+                        <button type="button"
+                            onclick="document.getElementById('chat-photo-input').click(); playAppSound('pop');"
+                            class="p-2 bg-pink-50 text-rose-600 rounded-full hover:bg-pink-100 text-xs" title="Gửi ảnh">
+                            🖼️
+                        </button>
+                        <button type="button" onclick="openShopModal(); playAppSound('pop');"
+                            class="p-2 bg-amber-50 text-amber-600 rounded-full hover:bg-amber-100 text-xs"
+                            title="Tặng thẻ đặc quyền">
+                            🎁
+                        </button>
+                        <input id="chat-input" type="text" placeholder="Nhập tin nhắn..."
+                            class="flex-1 bg-slate-100 px-3 py-2 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-rose-400"
+                            oninput="broadcastTyping()"
+                            onkeydown="if(event.key==='Enter') { sendChatMessage(); playAppSound('pop'); }">
+                        <button type="button" onclick="sendChatMessage(); playAppSound('pop');"
+                            class="px-3.5 py-2 bg-rose-500 text-white rounded-full shadow hover:bg-rose-600 shrink-0 text-xs font-extrabold">
+                            Gửi
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: SỔ ĐEN NOTE DỖI - GIẬN & HÌNH PHẠT -->
+            <div id="view-penalty" class="space-y-3 hidden">
+                <div
+                    class="bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-700 text-white p-3.5 rounded-3xl shadow-lg space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span
+                            class="text-[10px] font-black uppercase tracking-wider bg-black/25 px-2.5 py-0.5 rounded-full">⚖️
+                            Toà Án Tình Yêu • Sổ Đen</span>
+                        <button type="button" onclick="spinPenaltyRoulette(); playAppSound('pop');"
+                            class="text-[10px] bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full font-extrabold shadow hover:bg-amber-300">
+                            🎲 Quay Hình Phạt
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center bg-black/20 p-2 rounded-2xl">
+                        <div>
+                            <div id="stat-active-grudges" class="text-sm font-black text-amber-300">2 vụ</div>
+                            <div class="text-[9px] text-pink-100">Đang dỗi/Treo</div>
+                        </div>
+                        <div>
+                            <div id="stat-resolved-grudges" class="text-sm font-black text-emerald-300">5 vụ</div>
+                            <div class="text-[9px] text-pink-100">Đã dỗ xong</div>
+                        </div>
+                        <div>
+                            <div id="stat-harmony-rate" class="text-sm font-black text-white">71%</div>
+                            <div class="text-[9px] text-pink-100">Tỷ lệ làm lành</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-3.5 rounded-3xl space-y-2.5 border-2 border-purple-200">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-purple-900">📝 Ghi Note Dỗi / Giận & Phạt Mới</span>
+                        <span class="text-[9px] text-rose-600 font-bold">Đồng bộ sang máy kia</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-1.5 text-[10px] font-extrabold">
+                        <select id="grudge-offender"
+                            class="px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 focus:outline-none">
+                            <option value="👦🏻 Anh Yêu bị phạt">👦🏻 Phạt Anh Yêu</option>
+                            <option value="👧🏻 Công Chúa đang dỗi">👧🏻 Công Chúa dỗi</option>
+                        </select>
+                        <select id="grudge-level"
+                            class="px-2.5 py-1.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 focus:outline-none">
+                            <option value="😒 Cấp 1: Hơi dỗi nhẹ">😒 Cấp 1: Hơi dỗi</option>
+                            <option value="😤 Cấp 2: Giận tím người" selected>😤 Cấp 2: Giận tím người</option>
+                            <option value="💢 Cấp 3: Chiến tranh lạnh">💢 Cấp 3: Báo động đỏ</option>
+                        </select>
+                    </div>
+
+                    <input id="grudge-reason" type="text"
+                        placeholder="Nhập lý do dỗi/giận (VD: Rep tin nhắn chậm 15p...)"
+                        class="w-full px-3 py-2 rounded-xl bg-white border border-pink-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400">
+
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                            <span>🔨 Hình phạt / Yêu cầu bồi thường:</span>
+                            <button type="button" onclick="spinPenaltyRoulette(); playAppSound('pop');"
+                                class="text-purple-600 underline">🎲 Chọn ngẫu nhiên</button>
+                        </div>
+                        <input id="grudge-penalty" type="text" value="🧋 Mua đền 1 ly Trà sữa full topping + Ôm 5 phút"
+                            class="w-full px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-xs font-bold text-amber-900 focus:outline-none">
+                        <div class="flex gap-1 overflow-x-auto pt-1 text-[9px] font-extrabold">
+                            <button type="button"
+                                onclick="setQuickPenalty('🧋 Mua 2 ly Trà sữa full topping'); playAppSound('pop');"
+                                class="shrink-0 px-2 py-1 bg-white border border-amber-200 rounded-lg text-amber-800">🧋
+                                2 Trà sữa</button>
+                            <button type="button"
+                                onclick="setQuickPenalty('🥩 Bao 1 chầu nướng cuối tuần'); playAppSound('pop');"
+                                class="shrink-0 px-2 py-1 bg-white border border-rose-200 rounded-lg text-rose-800">🥩
+                                Bao ăn nướng</button>
+                            <button type="button"
+                                onclick="setQuickPenalty('💸 Nộp phạt 50 Xu + Viết tâm thư'); playAppSound('pop');"
+                                class="shrink-0 px-2 py-1 bg-white border border-purple-200 rounded-lg text-purple-800">💸
+                                Phạt 50 Xu</button>
+                            <button type="button"
+                                onclick="setQuickPenalty('🙇🏻‍♂️ Đấm lưng 15p + Thơm má 10 cái'); playAppSound('pop');"
+                                class="shrink-0 px-2 py-1 bg-white border border-pink-200 rounded-lg text-pink-800">💆🏻‍♀️
+                                Đấm lưng 15p</button>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="addGrudgeNote(); playAppSound('success');"
+                        class="w-full py-2 bg-gradient-to-r from-rose-500 via-purple-600 to-indigo-600 text-white rounded-xl text-xs font-extrabold shadow-md hover-lift">
+                        🚨 Ghi Sổ Đen & Bắn Trát Phạt Sang Máy Kia
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="text-xs font-extrabold text-slate-700 px-1 flex justify-between">
+                        <span>📋 Danh Sách Note Dỗi & Án Phạt</span>
+                        <span class="text-[10px] text-slate-500">Bấm "Chịu phạt" để làm lành</span>
+                    </div>
+                    <div id="penalty-list" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- TAB 5: KỶ NIỆM -->
+            <div id="view-bento" class="space-y-3 hidden">
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3.5 rounded-3xl shadow-md">
+                    <div class="flex justify-between items-center text-[10px] font-bold text-purple-200 mb-1">
+                        <span>❓ CÂU HỎI CẶP ĐÔI HẰNG NGÀY</span>
+                        <button type="button" onclick="nextDailyQuestion(); playAppSound('pop');"
+                            class="underline text-amber-300">🔄 Đổi câu hỏi</button>
+                    </div>
+                    <div id="qa-question-text" class="text-xs font-extrabold mb-2">"Khoảnh khắc nào tuần này làm bạn
+                        thấy yêu đối phương nhất?"</div>
+                    <div id="qa-interactive-area"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="glass-card p-2.5 rounded-2xl">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-[10px] font-extrabold text-rose-600">📅 Lịch Sắp Tới</span>
+                            <button type="button" onclick="openAddCalendarModal(); playAppSound('pop');"
+                                class="text-[10px] bg-rose-100 text-rose-600 px-1.5 rounded font-bold">+ Thêm</button>
+                        </div>
+                        <div id="calendar-list" class="space-y-1 text-[10px] font-semibold text-slate-700"></div>
+                    </div>
+
+                    <div class="bg-yellow-50/90 border border-yellow-200 p-2.5 rounded-2xl">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-[10px] font-extrabold text-yellow-800">📝 Giấy Nhớ Chung</span>
+                            <button type="button" onclick="openAddNoteModal(); playAppSound('pop');"
+                                class="text-[10px] bg-yellow-200 text-yellow-900 px-1.5 rounded font-bold">+
+                                Thêm</button>
+                        </div>
+                        <div id="notes-list" class="space-y-1 text-[10px] font-semibold text-slate-700"></div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-3 rounded-3xl">
+                    <div class="text-xs font-extrabold text-purple-700 mb-2">🎮 Mini Games Cặp Đôi</div>
+                    <div class="grid grid-cols-5 gap-1 text-center text-[9px] font-extrabold">
+                        <button type="button" onclick="spinFoodWheel(); playAppSound('pop');"
+                            class="bg-purple-50 hover:bg-purple-100 p-2 rounded-xl text-purple-700 border border-purple-200">
+                            <div class="text-base mb-0.5">🎡</div>Ăn gì?
+                        </button>
+                        <button type="button" onclick="playTruthOrDare(); playAppSound('pop');"
+                            class="bg-pink-50 hover:bg-pink-100 p-2 rounded-xl text-rose-700 border border-pink-200">
+                            <div class="text-base mb-0.5">🃏</div>Thật/Thách
+                        </button>
+                        <button type="button" onclick="playCoupleQuiz(); playAppSound('pop');"
+                            class="bg-sky-50 hover:bg-sky-100 p-2 rounded-xl text-sky-700 border border-sky-200">
+                            <div class="text-base mb-0.5">❓</div>Hiểu nhau
+                        </button>
+                        <button type="button" onclick="spinPenaltyRoulette(); playAppSound('pop');"
+                            class="bg-rose-50 hover:bg-rose-100 p-2 rounded-xl text-rose-700 border border-rose-200">
+                            <div class="text-base mb-0.5">⚖️</div>Quay Phạt
+                        </button>
+                        <button type="button" onclick="openShopModal(); playAppSound('pop');"
+                            class="bg-amber-50 hover:bg-amber-100 p-2 rounded-xl text-amber-800 border border-amber-200">
+                            <div class="text-base mb-0.5">🏪</div>Đổi quà
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIME-CAPSULE -->
+                <div class="glass-card p-3 rounded-3xl space-y-2.5 border-2 border-amber-200/80">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-extrabold text-amber-900">⏳ Hộp Thư Tương Lai (Time-Capsule)</span>
+                        <button type="button" onclick="toggleCapsuleForm(); playAppSound('pop');"
+                            class="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-extrabold shadow">+
+                            Niêm phong thư</button>
+                    </div>
+
+                    <div id="capsule-form"
+                        class="hidden bg-amber-50/90 p-2.5 rounded-2xl border border-amber-200 space-y-1.5 text-xs">
+                        <input id="capsule-title" type="text" placeholder="Tiêu đề (VD: Kỷ niệm 2 năm)"
+                            class="w-full px-2.5 py-1.5 rounded-xl bg-white border border-amber-200 text-[11px] font-bold">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-bold text-amber-800 shrink-0">Ngày mở:</span>
+                            <input id="capsule-date" type="date" value="2027-10-20"
+                                class="flex-1 px-2 py-1 rounded-xl bg-white border border-amber-200 text-[11px] font-bold">
+                        </div>
+                        <textarea id="capsule-msg" rows="2" placeholder="Lời nhắn bí mật gửi tương lai..."
+                            class="w-full px-2.5 py-1.5 rounded-xl bg-white border border-amber-200 text-[11px]"></textarea>
+                        <button type="button" onclick="addTimeCapsule(); playAppSound('success');"
+                            class="w-full py-1.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-xl text-[11px] font-extrabold">
+                            🔒 Khóa & Đếm Ngược Đến Hạn
+                        </button>
+                    </div>
+
+                    <div id="capsule-list" class="space-y-1.5"></div>
+                </div>
+            </div>
+
+            <!-- TAB 6: HỒ SƠ TÀI KHOẢN & ĐỒNG BỘ CLOUD -->
+            <div id="view-auth" class="space-y-2.5 hidden pt-1">
+                <div
+                    class="bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white p-3.5 rounded-3xl shadow-md border border-pink-500/30 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div id="profile-avatar-badge"
+                                class="w-12 h-12 rounded-2xl bg-rose-500/30 border-2 border-rose-400 flex items-center justify-center text-2xl shadow">
+                                👦🏻</div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span id="profile-name-badge" class="text-sm font-black text-white">Anh Yêu</span>
+                                    <span
+                                        class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-bold">Trực
+                                        tuyến</span>
+                                </div>
+                                <div id="profile-email-badge" class="text-[11px] text-pink-200/80">Chưa có email</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="openEditProfileModal(); playAppSound('pop');"
+                            class="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold text-pink-200 border border-white/15">
+                            ✏️ Sửa Hồ Sơ
+                        </button>
+                    </div>
+
+                    <div
+                        class="bg-black/35 p-2.5 rounded-2xl border border-white/10 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl overflow-hidden border border-rose-300 shadow shrink-0 bg-white/10">
+                                <img src="./icons/avatar-app.png" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-slate-400 font-bold">Đang ghép đôi với:</div>
+                                <div id="partner-name-display" class="text-[11px] font-extrabold text-amber-300">Chưa ghép đôi</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="openEditAnniversaryModal(); playAppSound('pop');"
+                            class="px-2.5 py-1 bg-rose-500/30 border border-rose-400/40 rounded-lg text-[10px] font-bold text-rose-200">
+                            📅 Ngày yêu
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card p-3.5 rounded-3xl space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                            <span id="pair-status-dot"
+                                class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                            Mã Phòng Ghép Đôi Của Hai Bạn
+                        </span>
+                        <span id="pair-status-badge"
+                            class="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-extrabold">Đã
+                            kết nối 2/2</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <div onclick="scrambleText(); playAppSound('pop');" id="scramble-box"
+                            class="flex-1 text-center text-lg font-black tracking-[0.2em] text-rose-600 bg-rose-50 py-2 rounded-2xl border-2 border-dashed border-rose-300 cursor-pointer font-mono">
+                            US-2010
+                        </div>
+                        <button type="button" onclick="scrambleText(); playAppSound('pop');"
+                            class="px-3 py-2.5 bg-rose-500 text-white rounded-2xl text-[11px] font-extrabold shadow">
+                            📋 Copy mã
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card p-3.5 rounded-3xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-extrabold text-slate-500 uppercase">☁️ Đồng bộ Cloud giữa 2 điện
+                            thoại</span>
+                        <button type="button" onclick="openCloudConfigModal(); playAppSound('pop');"
+                            class="text-[10px] font-extrabold text-indigo-600 underline">Cấu hình Cloud</button>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <input id="partner-code-input" type="text" placeholder="Nhập mã phòng (VD: US-2010)..."
+                            class="flex-1 px-3 py-2 rounded-xl bg-white border border-pink-300 font-mono font-bold text-xs uppercase focus:outline-none">
+                        <button type="button" onclick="simulatePartnerAcceptPair(); playAppSound('success');"
+                            class="px-3.5 py-2 bg-gradient-to-r from-rose-500 to-amber-500 text-white rounded-xl text-[11px] font-extrabold shadow">
+                            Vào Phòng
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-rose-950/90 text-rose-100 p-3 rounded-2xl border border-rose-800 flex items-center justify-between">
+                    <div>
+                        <div class="text-[11px] font-extrabold text-rose-300">💔 Muốn đổi người ghép đôi?</div>
+                        <div class="text-[9px] text-rose-200/80">Ngắt kết nối hiện tại & tạo mã ghép đôi mới</div>
+                    </div>
+                    <button type="button" onclick="openUnpairModal(); playAppSound('pop');"
+                        class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-extrabold shrink-0">
+                        Hủy Ghép Đôi
+                    </button>
+                </div>
+
+                <button type="button" onclick="logoutAccount(); playAppSound('pop');"
+                    class="w-full py-2.5 bg-white hover:bg-rose-50 text-rose-600 border-2 border-rose-200 rounded-2xl text-xs font-extrabold shadow-sm flex items-center justify-center gap-2 transition">
+                    🚪 Đăng Xuất / Đổi Tài Khoản Khác
+                </button>
+            </div>
+
+        </div>
+
+        <!-- FLOATING ACTION BUTTON -->
+        <button type="button" id="fab-btn" onclick="openAddRadioModal(); playAppSound('pop');"
+            class="absolute bottom-20 right-5 w-11 h-11 rounded-full bg-gradient-to-tr from-rose-600 to-amber-500 text-white shadow-xl flex items-center justify-center hover-lift z-30 font-black text-xl"
+            title="Thêm mốc giờ phát Radio">
+            +
+        </button>
+
+        <!-- BOTTOM NAVIGATION -->
+        <div id="bottom-nav-bar"
+            class="absolute bottom-3 left-3 right-3 glass-card py-2 px-1.5 rounded-3xl shadow-xl border border-white flex justify-around items-center z-[60]">
+            <button type="button" onclick="switchTab('home'); playAppSound('pop');" id="nav-home"
+                class="flex flex-col items-center text-rose-600 scale-105 transition px-2 py-0.5">
+                <i data-lucide="home" class="w-4 h-4 pointer-events-none"></i>
+                <span class="text-[9px] font-extrabold mt-0.5 pointer-events-none">Nhà & Pet</span>
+            </button>
+            <button type="button" onclick="switchTab('locket'); playAppSound('pop');" id="nav-locket"
+                class="flex flex-col items-center text-slate-400 hover:text-slate-700 transition px-2 py-0.5">
+                <i data-lucide="camera" class="w-4 h-4 pointer-events-none"></i>
+                <span class="text-[9px] font-extrabold mt-0.5 pointer-events-none">Locket</span>
+            </button>
+            <button type="button" onclick="switchTab('chat'); playAppSound('pop');" id="nav-chat"
+                class="flex flex-col items-center text-slate-400 hover:text-slate-700 transition px-2 py-0.5">
+                <i data-lucide="message-circle-heart" class="w-4 h-4 pointer-events-none"></i>
+                <span class="text-[9px] font-extrabold mt-0.5 pointer-events-none">Chat</span>
+            </button>
+            <button type="button" onclick="switchTab('penalty'); playAppSound('pop');" id="nav-penalty"
+                class="flex flex-col items-center text-slate-400 hover:text-slate-700 transition px-2 py-0.5">
+                <i data-lucide="scale" class="w-4 h-4 pointer-events-none"></i>
+                <span class="text-[9px] font-extrabold mt-0.5 pointer-events-none">Dỗi & Phạt</span>
+            </button>
+            <button type="button" onclick="switchTab('bento'); playAppSound('pop');" id="nav-bento"
+                class="flex flex-col items-center text-slate-400 hover:text-slate-700 transition px-2 py-0.5">
+                <i data-lucide="layout-grid" class="w-4 h-4 pointer-events-none"></i>
+                <span class="text-[9px] font-extrabold mt-0.5 pointer-events-none">Kỷ Niệm</span>
+            </button>
+            <button type="button" onclick="switchTab('auth'); playAppSound('pop');" id="nav-auth"
+                class="flex flex-col items-center text-slate-400 hover:text-slate-700 transition px-2 py-0.5">
+                <i data-lucide="user" class="w-4 h-4 pointer-events-none"></i>
+                <span class="text-[9px] font-extrabold mt-0.5 pointer-events-none">Hồ Sơ</span>
+            </button>
+        </div>
+
+        <!-- OVERLAYS -->
+        <div id="scrim" onclick="closeAllOverlays(); playAppSound('pop');"
+            class="scrim-backdrop absolute inset-0 z-40 opacity-0 pointer-events-none"></div>
+
+        <div id="bottom-sheet"
+            class="bottom-sheet absolute bottom-0 left-0 right-0 bg-white z-[65] p-5 rounded-t-[36px] shadow-2xl translate-y-full max-h-[84%] overflow-y-auto">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-3"></div>
+            <div id="sheet-badge" class="text-[10px] font-black text-rose-500 uppercase tracking-wider mb-1">🚨 TƯƠNG
+                TÁC TRỰC TIẾP 2 CHIỀU</div>
+            <h3 id="sheet-title" class="text-base font-black text-slate-800">Tiêu đề</h3>
+            <div id="sheet-desc" class="text-xs text-slate-600 mt-2 mb-4 whitespace-pre-line">Nội dung</div>
+            <div id="sheet-default-actions" class="grid grid-cols-2 gap-2"></div>
+        </div>
+
+        <!-- SIDE DRAWER -->
+        <div id="side-drawer"
+            class="side-drawer absolute top-0 bottom-0 left-0 w-64 bg-white z-[65] p-5 shadow-2xl -translate-x-full flex flex-col justify-between rounded-r-3xl">
+            <div class="space-y-3">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <span class="font-black text-rose-600 text-sm">⚙️ UsVerse Menu</span>
+                    <button type="button" onclick="closeAllOverlays(); playAppSound('pop');"
+                        class="p-1 bg-slate-100 rounded-lg text-xs font-bold">✕</button>
+                </div>
+                <div class="bg-pink-50 p-3 rounded-2xl border border-pink-100">
+                    <div class="text-[10px] text-slate-400 font-bold">Thiết bị này đang đăng nhập:</div>
+                    <div id="drawer-user-name" class="text-xs font-black text-rose-600 mt-0.5">Anh Yêu 👦🏻</div>
+                    <div class="text-[10px] text-slate-500">Mã phòng: <b id="drawer-room-code">US-2010</b></div>
+                </div>
+                <button type="button" onclick="closeAllOverlays(); quickSwitchRole();"
+                    class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow">
+                    🔄 Đổi Vai (Anh Yêu ⇄ Công Chúa)
+                </button>
+                <button type="button" onclick="closeAllOverlays(); openCloudConfigModal();"
+                    class="w-full py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow">
+                    ☁️ Quản Lý Cloud (Tự Động Bật)
+                </button>
+                <button type="button" onclick="closeAllOverlays(); open2010GiftModal(); playAppSound('success');"
+                    class="w-full py-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl text-xs font-bold shadow">
+                    🎁 Mở Thiệp Chúc Mừng 20/10
+                </button>
+                <div class="border-t border-slate-200 pt-2">
+                    <div class="text-[9px] font-bold text-slate-400 mb-1.5">💾 SAO LƯU & KHÔI PHỤC DỮ LIỆU</div>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button type="button" onclick="closeAllOverlays(); exportBackup();"
+                            class="py-2 bg-blue-600 text-white rounded-xl text-[10px] font-bold shadow">
+                            📤 Xuất Backup
+                        </button>
+                        <button type="button" onclick="closeAllOverlays(); importBackup();"
+                            class="py-2 bg-amber-600 text-white rounded-xl text-[10px] font-bold shadow">
+                            📥 Nhập Backup
+                        </button>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAllOverlays(); openResetConfirmModal();"
+                    class="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold">
+                    🗑️ Xóa Sạch & Bắt Đầu Mới
+                </button>
+                <button type="button" onclick="closeAllOverlays(); logoutAccount(); playAppSound('pop');"
+                    class="w-full py-2 bg-rose-600 text-white rounded-xl text-xs font-bold">
+                    🚪 Đăng Xuất Tài Khoản
+                </button>
+            </div>
+            <div class="text-[10px] text-slate-400 text-center">UsVerse Production App v1.0</div>
+        </div>
+
+        <!-- LIGHTBOX -->
+        <div id="lightbox"
+            class="absolute inset-4 my-auto h-84 bg-slate-900 text-white z-[70] rounded-3xl p-4 flex flex-col justify-between shadow-2xl border border-pink-500/40 opacity-0 pointer-events-none scale-90 transition-all duration-300">
+            <div class="flex justify-between items-center">
+                <span id="lb-title" class="text-xs font-extrabold text-pink-400">Ảnh</span>
+                <div class="flex items-center gap-1.5">
+                    <a id="lb-download-btn" href="#" download="usverse-locket.jpg"
+                        class="hidden px-2.5 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-[10px] font-extrabold">⬇️
+                        Tải về</a>
+                    <button type="button" onclick="closeAllOverlays(); playAppSound('pop');"
+                        class="px-2 py-0.5 bg-slate-800 rounded-full text-xs">✕</button>
+                </div>
+            </div>
+            <div class="my-auto flex items-center justify-center overflow-hidden rounded-2xl max-h-48">
+                <img id="lb-img" class="hidden w-full h-48 object-cover rounded-2xl" alt="Captured">
+                <div id="lb-emoji" class="text-6xl text-center">🏔️</div>
+            </div>
+            <div id="lb-desc" class="text-xs text-center text-slate-300 bg-black/40 p-2 rounded-xl">Mô tả</div>
+        </div>
+
+    </div>
+
+    <!-- ================= PRODUCTION JAVASCRIPT ENGINE ================= -->
+    <script>
+        if (window.lucide) {
+            try { lucide.createIcons(); } catch (e) { }
+        }
+
+        // Đăng ký Service Worker cho PWA App
+        let deferredPrompt = null;
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => { });
+            });
+        }
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('pwa-install-btn');
+            if (btn) btn.classList.remove('hidden');
+        });
+        async function installPWAApp() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById('pwa-install-btn').classList.add('hidden');
+        }
+
+        // --- 0. HELPER: CHỐNG XSS ---
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        // --- 0b. BẢO VỆ DỮ LIỆU: AUTO-BACKUP 3 TẦNG, EXPORT/IMPORT, GIỚI HẠN DUNG LƯỢNG ---
+
+        // ====== TẦNG 1: IndexedDB — Bộ nhớ lớn, bền vững hơn localStorage ======
+        const IDB_NAME = 'UsVerseBackupDB';
+        const IDB_STORE = 'backups';
+
+        function openIDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(IDB_NAME, 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(IDB_STORE)) {
+                        db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function saveToIDB(data) {
+            try {
+                const db = await openIDB();
+                const tx = db.transaction(IDB_STORE, 'readwrite');
+                const store = tx.objectStore(IDB_STORE);
+                store.put({ id: 'auto_latest', state: data, savedAt: Date.now() });
+                store.put({ id: 'daily_' + new Date().toISOString().slice(0, 10), state: data, savedAt: Date.now() });
+                await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+                db.close();
+            } catch (e) { }
+        }
+
+        async function loadFromIDB() {
+            try {
+                const db = await openIDB();
+                const tx = db.transaction(IDB_STORE, 'readonly');
+                const store = tx.objectStore(IDB_STORE);
+                const result = await new Promise((res, rej) => {
+                    const r = store.get('auto_latest');
+                    r.onsuccess = () => res(r.result);
+                    r.onerror = () => rej(r.error);
+                });
+                db.close();
+                return (result && result.state && result.state.updatedAt) ? result.state : null;
+            } catch (e) { return null; }
+        }
+
+        // Kiểm tra dung lượng localStorage đã dùng (bytes)
+        function getLocalStorageUsedBytes() {
+            let total = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                total += (key.length + (localStorage.getItem(key) || '').length) * 2; // UTF-16
+            }
+            return total;
+        }
+
+        // Cảnh báo nếu localStorage gần đầy (>4MB trên tổng ~5MB Safari iOS)
+        function checkStorageQuota() {
+            const used = getLocalStorageUsedBytes();
+            const usedMB = (used / 1024 / 1024).toFixed(2);
+            if (used > 4 * 1024 * 1024) {
+                showToast(`⚠️ Bộ nhớ gần đầy (${usedMB}MB)! Hãy xóa ảnh cũ hoặc Xuất Backup.`);
+                return false;
+            }
+            return true;
+        }
+
+        // Giới hạn dữ liệu media để tránh đầy localStorage
+        const MAX_LOCKET_PHOTOS = 50;
+        const MAX_CHAT_MESSAGES = 200;
+
+        function trimOldData() {
+            if (appState.locketPhotos && appState.locketPhotos.length > MAX_LOCKET_PHOTOS) {
+                appState.locketPhotos = appState.locketPhotos.slice(0, MAX_LOCKET_PHOTOS);
+            }
+            if (appState.chatMessages && appState.chatMessages.length > MAX_CHAT_MESSAGES) {
+                // Giữ lại tin nhắn text, ưu tiên xóa ảnh/voice cũ nhất
+                const textMsgs = appState.chatMessages.filter(m => m.type === 'text' || m.type === 'voice_sample');
+                const mediaMsgs = appState.chatMessages.filter(m => m.type === 'image' || m.type === 'voice');
+                const keepMedia = mediaMsgs.slice(-30); // Giữ 30 media gần nhất
+                const keepText = textMsgs.slice(-(MAX_CHAT_MESSAGES - keepMedia.length));
+                appState.chatMessages = [...keepText, ...keepMedia].sort((a, b) => a.id - b.id);
+            }
+        }
+
+        // Xuất dữ liệu backup (download file JSON)
+        function exportBackup() {
+            const backup = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                roomState: appState,
+                cloudDbUrl: localStorage.getItem('USVERSE_FIREBASE_DB_URL') || ''
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `UsVerse_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            playAppSound('success');
+            showToast('💾 Đã tải file backup thành công!');
+        }
+
+        // Nhập dữ liệu từ file backup
+        function importBackup() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const backup = JSON.parse(evt.target.result);
+                        if (!backup.roomState || !backup.version) {
+                            showToast('❌ File backup không hợp lệ!');
+                            return;
+                        }
+                        appState = Object.assign(JSON.parse(JSON.stringify(defaultRoomState)), backup.roomState);
+                        if (backup.cloudDbUrl) {
+                            localStorage.setItem('USVERSE_FIREBASE_DB_URL', backup.cloudDbUrl);
+                            cloudDbUrl = backup.cloudDbUrl;
+                        }
+                        saveState();
+                        renderAll();
+                        playAppSound('success');
+                        showToast('✅ Khôi phục dữ liệu từ backup thành công!');
+                    } catch (err) {
+                        showToast('❌ Lỗi đọc file backup: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // ====== TẦNG 2: Auto-backup đa tầng (sessionStorage + IndexedDB) ======
+        function runAutoBackup() {
+            try {
+                sessionStorage.setItem('USVERSE_AUTO_BACKUP', JSON.stringify(appState));
+            } catch (e) { }
+            saveToIDB(appState);
+        }
+
+        // Chạy auto-backup mỗi 30 giây
+        setInterval(runAutoBackup, 30000);
+        // Backup ngay khi user rời trang hoặc chuyển app
+        window.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') runAutoBackup();
+        });
+        window.addEventListener('pagehide', runAutoBackup);
+
+        // ====== TẦNG 3: Auto-push Cloud mỗi 5 phút (nếu đã kết nối) ======
+        setInterval(() => {
+            if (typeof cloudDbUrl !== 'undefined' && cloudDbUrl && typeof pushToCloud === 'function') {
+                pushToCloud({ action: 'AUTO_BACKUP' });
+            }
+        }, 300000);
+
+        // Khôi phục từ auto-backup nếu localStorage bị xóa
+        function tryRecoverFromAutoBackup() {
+            try {
+                const ssBackup = sessionStorage.getItem('USVERSE_AUTO_BACKUP');
+                if (ssBackup) {
+                    const parsed = JSON.parse(ssBackup);
+                    if (parsed && parsed.updatedAt) return parsed;
+                }
+            } catch (e) { }
+            return null;
+        }
+
+        // Recovery async từ IndexedDB + Cloud (chạy sau khi app đã load)
+        async function tryDeepRecovery() {
+            if (localStorage.getItem(ROOM_STATE_KEY)) return;
+            const idbState = await loadFromIDB();
+            if (idbState && idbState.updatedAt) {
+                appState = Object.assign(JSON.parse(JSON.stringify(defaultRoomState)), idbState);
+                localStorage.setItem(ROOM_STATE_KEY, JSON.stringify(appState));
+                renderAll();
+                showToast('🔄 Đã khôi phục dữ liệu từ bản sao lưu tự động!');
+                return;
+            }
+            if (typeof cloudDbUrl !== 'undefined' && cloudDbUrl) {
+                try {
+                    const cleanUrl = cloudDbUrl.replace(/\/$/, '');
+                    const res = await fetch(`${cleanUrl}/rooms/${appState.roomCode}.json`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.state && data.state.updatedAt) {
+                            appState = Object.assign(JSON.parse(JSON.stringify(defaultRoomState)), data.state);
+                            localStorage.setItem(ROOM_STATE_KEY, JSON.stringify(appState));
+                            renderAll();
+                            showToast('☁️ Đã khôi phục dữ liệu từ Cloud!');
+                        }
+                    }
+                } catch (e) { }
+            }
+        }
+
+        // --- 1. TÁCH BIỆT PHIÊN THIẾT BỊ (SESSION) & DỮ LIỆU PHÒNG CHUNG (SHARED ROOM STATE) ---
+        const ROOM_STATE_KEY = 'USVERSE_PROD_ROOM_DATA';
+        const SESSION_ROLE_KEY = 'USVERSE_SESSION_ROLE';
+        const SESSION_AUTH_KEY = 'USVERSE_SESSION_LOGGED_IN';
+        const CLOUD_URL_KEY = 'USVERSE_FIREBASE_DB_URL';
+
+        // ★ Firebase URL mặc định — đã được kết nối với Firebase Realtime Database
+        const DEFAULT_CLOUD_URL = 'https://appty-b3ff0-default-rtdb.firebaseio.com';
+
+        let sessionRole = sessionStorage.getItem(SESSION_ROLE_KEY) || localStorage.getItem('USVERSE_LAST_ROLE') || 'boy';
+        // ★ Người dùng mới (chưa bao giờ đăng nhập) → sessionStorage trả null → PHẢI ở màn đăng nhập
+        let sessionLoggedIn = sessionStorage.getItem(SESSION_AUTH_KEY) === 'true';
+        // Cloud luôn bật: dùng URL đã lưu hoặc URL mặc định (tự động cập nhật nếu URL cũ là placeholder)
+        let cloudDbUrl = localStorage.getItem(CLOUD_URL_KEY);
+        if (!cloudDbUrl || cloudDbUrl.includes('usverse-default-rtdb')) {
+            cloudDbUrl = DEFAULT_CLOUD_URL;
+            localStorage.setItem(CLOUD_URL_KEY, DEFAULT_CLOUD_URL);
+        }
+
+        const defaultRoomState = {
+            updatedAt: Date.now(),
+            roomCode: 'US-2010',
+            isPaired: false,
+            startDate: new Date().toISOString(),
+            coins: 0,
+            streak: 0,
+            mood: '🥰 Đang yêu đời',
+            pet: { level: 1, exp: 0, hunger: 50, happy: 50 },
+            accounts: {
+                boy: { name: 'Anh Yêu', email: '', pass: '', avatar: '👦🏻' },
+                girl: { name: 'Công Chúa', email: '', pass: '', avatar: '👧🏻' }
+            },
+            radioTracks: [],
+            locketPhotos: [],
+            chatMessages: [],
+            grudges: [],
+            resolvedHistoryCount: 0,
+            qa: {
+                qIdx: 0,
+                boyAns: '',
+                girlAns: '',
+                revealed: false
+            },
+            quizAnswered: [],
+            calendarEvents: [],
+            stickyNotes: [],
+            capsules: []
+        };
+
+        let appState = loadRoomState();
+
+        function loadRoomState() {
+            try {
+                const raw = localStorage.getItem(ROOM_STATE_KEY);
+                if (!raw) {
+                    // Thử khôi phục từ auto-backup nếu localStorage bị xóa
+                    const recovered = tryRecoverFromAutoBackup();
+                    if (recovered) {
+                        showToast('🔄 Đã khôi phục dữ liệu từ bản sao lưu tự động!');
+                        return Object.assign(JSON.parse(JSON.stringify(defaultRoomState)), recovered);
+                    }
+                    return JSON.parse(JSON.stringify(defaultRoomState));
+                }
+                return Object.assign(JSON.parse(JSON.stringify(defaultRoomState)), JSON.parse(raw));
+            } catch (e) {
+                const recovered = tryRecoverFromAutoBackup();
+                if (recovered) {
+                    return Object.assign(JSON.parse(JSON.stringify(defaultRoomState)), recovered);
+                }
+                return JSON.parse(JSON.stringify(defaultRoomState));
+            }
+        }
+
+        // --- 2. REAL-TIME SYNC ENGINE (BROADCAST CHANNEL + STORAGE + CLOUD FIREBASE) ---
+        const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('USVERSE_REALTIME_CHANNEL') : null;
+
+        function saveState(eventMeta = null) {
+            appState.updatedAt = Date.now();
+            trimOldData(); // Cắt bớt ảnh/voice cũ nếu vượt giới hạn
+            try {
+                localStorage.setItem(ROOM_STATE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                showToast('⚠️ Bộ nhớ đầy! Hãy xóa bớt ảnh cũ hoặc Xuất Backup.');
+            }
+            checkStorageQuota(); // Cảnh báo nếu gần đầy
+            saveToIDB(appState); // Backup song song vào IndexedDB
+
+            if (syncChannel) {
+                syncChannel.postMessage({
+                    type: 'STATE_SYNC',
+                    state: appState,
+                    meta: eventMeta,
+                    senderRole: sessionRole
+                });
+            }
+
+            if (cloudDbUrl) {
+                pushToCloud(eventMeta);
+            }
+        }
+
+        if (syncChannel) {
+            syncChannel.onmessage = (ev) => {
+                const data = ev.data;
+                if (!data) return;
+
+                if (data.type === 'TYPING' && data.senderRole !== sessionRole) {
+                    showPartnerTypingIndicator();
+                    return;
+                }
+
+                if (data.type === 'STATE_SYNC' && data.state) {
+                    appState = data.state;
+                    renderAll();
+                    handleIncomingRealtimeEvent(data.meta, data.senderRole);
+                }
+            };
+        }
+
+        window.addEventListener('storage', (ev) => {
+            if (ev.key === ROOM_STATE_KEY && ev.newValue) {
+                try {
+                    appState = JSON.parse(ev.newValue);
+                    renderAll();
+                } catch (e) { }
+            }
+        });
+
+        function handleIncomingRealtimeEvent(meta, senderRole) {
+            if (!meta || senderRole === sessionRole) return;
+            const partnerName = appState.accounts[senderRole]?.name || 'Người yêu';
+
+            if (meta.action === 'SIGNAL') {
+                playAppSound('success');
+                openBottomSheet(
+                    `💌 ${partnerName} vừa gửi tín hiệu: ${meta.title}`,
+                    meta.desc,
+                    `<div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="confirmSignalToChat('${meta.title.replace(/'/g, "\\'")}', 'Okela chốt đơn luôn nha ❤️');" class="py-2.5 bg-rose-500 text-white rounded-2xl text-xs font-extrabold shadow-md">✅ Đồng ý ngay!</button>
+            <button type="button" onclick="closeAllOverlays(); playAppSound('pop');" class="py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Đóng</button>
+          </div>`,
+                    '📡 TÍN HIỆU TRỰC TIẾP TỪ MÁY KIA'
+                );
+            } else if (meta.action === 'CHAT') {
+                playAppSound('pop');
+                showToast(`💬 ${partnerName}: ${meta.preview}`);
+            } else if (meta.action === 'LOCKET') {
+                playAppSound('shutter');
+                showToast(`📸 ${partnerName} vừa đăng 1 ảnh Locket mới!`);
+            } else if (meta.action === 'GRUDGE') {
+                playAppSound('success');
+                showToast(`🚨 ${partnerName} vừa ghi Sổ Đen Dỗi & Phạt!`);
+            }
+        }
+
+        async function pushToCloud(meta = null) {
+            if (!cloudDbUrl) return;
+            try {
+                const cleanUrl = cloudDbUrl.replace(/\/$/, '');
+                await fetch(`${cleanUrl}/rooms/${appState.roomCode}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: appState, lastMeta: meta, senderRole: sessionRole })
+                });
+            } catch (e) { }
+        }
+
+        async function pullFromCloud() {
+            if (!cloudDbUrl) return;
+            try {
+                const cleanUrl = cloudDbUrl.replace(/\/$/, '');
+                const res = await fetch(`${cleanUrl}/rooms/${appState.roomCode}.json`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data && data.state) {
+                    // Nếu cloud mới hơn hoặc local là state mặc định → lấy cloud
+                    const isLocalDefault = !localStorage.getItem(ROOM_STATE_KEY);
+                    if (data.state.updatedAt > appState.updatedAt || isLocalDefault) {
+                        appState = Object.assign(JSON.parse(JSON.stringify(defaultRoomState)), data.state);
+                        localStorage.setItem(ROOM_STATE_KEY, JSON.stringify(appState));
+                        saveToIDB(appState);
+                        renderAll();
+                        handleIncomingRealtimeEvent(data.lastMeta, data.senderRole);
+                    }
+                }
+            } catch (e) { }
+        }
+        setInterval(pullFromCloud, 3500);
+
+        function openCloudConfigModal() {
+            openFormModal({
+                badge: '☁️ CẤU HÌNH ĐỒNG BỘ CLOUD',
+                title: 'Quản Lý Kết Nối Firebase Cloud',
+                desc: `Dữ liệu đang tự động đồng bộ lên Cloud mỗi khi bạn thao tác. Nếu muốn dùng Firebase riêng, thay URL bên dưới.\n\n📡 Trạng thái: ${cloudDbUrl ? '✅ Đang kết nối' : '❌ Chưa kết nối'}\n📦 Phòng: ${appState.roomCode}`,
+                fields: [
+                    { id: 'url', label: 'Firebase Database URL', placeholder: 'https://ten-project.firebaseio.com', value: cloudDbUrl }
+                ],
+                submitText: '☁️ Lưu & Đồng Bộ Ngay',
+                onSubmit: (vals) => {
+                    cloudDbUrl = vals.url || DEFAULT_CLOUD_URL;
+                    localStorage.setItem(CLOUD_URL_KEY, cloudDbUrl);
+                    pushToCloud();
+                    pullFromCloud();
+                    showToast('☁️ Đã cập nhật Cloud cho phòng ' + appState.roomCode);
+                }
+            });
+        }
+
+        function getSelf() { return appState.accounts[sessionRole]; }
+        function getPartner() { return appState.accounts[sessionRole === 'boy' ? 'girl' : 'boy']; }
+
+        // --- 3. HỆ THỐNG ÂM THANH WEB AUDIO API ---
+        let sharedAudioCtx = null;
+        function getAudioCtx() {
+            if (!sharedAudioCtx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) sharedAudioCtx = new AudioCtx();
+            }
+            if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+                sharedAudioCtx.resume();
+            }
+            return sharedAudioCtx;
+        }
+
+        function playAppSound(type = 'pop') {
+            try {
+                const ctx = getAudioCtx();
+                if (!ctx) return;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                if (type === 'pop') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(550, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.07);
+                    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+                    osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+                    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                } else if (type === 'shutter') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(150, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+                }
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + (type === 'success' ? 0.38 : 0.13));
+            } catch (e) { }
+        }
+
+        // --- 4. RENDER TOÀN BỘ GIAO DIỆN ---
+        function renderAll() {
+            const self = getSelf();
+            const partner = getPartner();
+
+            document.getElementById('drawer-user-name').innerText = `${self.name} ${self.avatar}`;
+            document.getElementById('drawer-room-code').innerText = appState.roomCode;
+
+            document.getElementById('profile-avatar-badge').innerText = self.avatar;
+            document.getElementById('profile-name-badge').innerText = self.name;
+            document.getElementById('profile-email-badge').innerText = self.email;
+            document.getElementById('couple-avatars-pair').innerText = `${appState.accounts.boy.avatar} ❤️ ${appState.accounts.girl.avatar}`;
+            document.getElementById('partner-name-display').innerText = appState.isPaired
+                ? `${partner.name} (${partner.email})`
+                : 'Chưa ghép đôi (Đang chờ...)';
+            document.getElementById('scramble-box').innerText = appState.roomCode;
+
+            const pairBadge = document.getElementById('pair-status-badge');
+            if (appState.isPaired) {
+                pairBadge.className = "text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-extrabold";
+                pairBadge.innerText = "Đã kết nối 2/2";
+            } else {
+                pairBadge.className = "text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-extrabold";
+                pairBadge.innerText = "Chờ đối phương 1/2";
+            }
+
+            document.getElementById('coin-count').innerText = appState.coins;
+            document.getElementById('streak-count-badge').innerText = `${appState.streak} Ngày`;
+            document.getElementById('home-boy-avatar').innerText = appState.accounts.boy.avatar;
+            document.getElementById('home-girl-avatar').innerText = appState.accounts.girl.avatar;
+            document.getElementById('current-mood-badge').innerText = appState.mood;
+
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                const isCurrent = btn.getAttribute('data-mood') === appState.mood;
+                btn.className = isCurrent
+                    ? "mood-btn px-2 py-1 rounded-lg bg-white shadow-sm text-rose-600"
+                    : "mood-btn px-2 py-1 rounded-lg text-slate-600";
+            });
+
+            document.getElementById('txt-hunger').innerText = `${appState.pet.hunger}%`;
+            document.getElementById('txt-happy').innerText = `${appState.pet.happy}%`;
+            document.getElementById('pet-level-txt').innerText = `Mochi Lv.${appState.pet.level}`;
+            document.getElementById('pet-exp-txt').innerText = `EXP: ${appState.pet.exp}/100`;
+
+            // Đồng bộ tên & avatar người bên kia trong khung Chat
+            document.getElementById('chat-partner-avatar').innerText = partner.avatar;
+            document.getElementById('chat-partner-name').innerText = `${partner.name} ❤️`;
+            document.getElementById('typing-partner-avatar').innerText = partner.avatar;
+            document.getElementById('typing-partner-name').innerText = `${partner.name} đang gõ`;
+
+            updateAnniversaryClock();
+            renderRadioPills();
+            renderLocketWall();
+            renderChatList();
+            renderPenaltyList();
+            renderBentoTab();
+        }
+
+        function updateAnniversaryClock() {
+            const start = new Date(appState.startDate);
+            const now = new Date();
+            const diffMs = Math.max(0, now - start);
+            const totalDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+            const years = Math.floor(totalDays / 365);
+            const months = Math.floor((totalDays % 365) / 30);
+            const days = (totalDays % 365) % 30;
+            const secs = String(now.getSeconds()).padStart(2, '0');
+
+            const titleEl = document.getElementById('love-days-title');
+            const detailEl = document.getElementById('love-time-detail');
+            if (titleEl) titleEl.innerText = `${totalDays} NGÀY BÊN NHAU`;
+            if (detailEl) {
+                detailEl.innerHTML = `${String(years).padStart(2, '0')} Năm • ${String(months).padStart(2, '0')} Tháng • ${String(days).padStart(2, '0')} Ngày • <span class="text-yellow-200 font-bold">${secs}s</span>`;
+            }
+        }
+        setInterval(updateAnniversaryClock, 1000);
+
+        // --- 5. MODAL NHẬP LIỆU NỘI BỘ ---
+        function openFormModal({ badge = '✨ NHẬP THÔNG TIN', title, desc = '', fields = [], submitText = 'Lưu Lại', onSubmit }) {
+            showScrim();
+            document.getElementById('sheet-badge').innerText = badge;
+            document.getElementById('sheet-title').innerText = title;
+
+            let fieldsHtml = desc ? `<div class="text-xs text-slate-500 mb-2.5">${desc}</div>` : '';
+            fieldsHtml += `<div class="space-y-2 text-left">`;
+            fields.forEach(f => {
+                if (f.type === 'textarea') {
+                    fieldsHtml += `
+            <div>
+              <label class="text-[10px] font-bold text-slate-600">${f.label}</label>
+              <textarea id="modal-field-${f.id}" rows="2" placeholder="${f.placeholder || ''}" class="w-full mt-0.5 px-3 py-2 rounded-xl bg-slate-50 border border-pink-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-400">${f.value || ''}</textarea>
+            </div>`;
+                } else {
+                    fieldsHtml += `
+            <div>
+              <label class="text-[10px] font-bold text-slate-600">${f.label}</label>
+              <input id="modal-field-${f.id}" type="${f.type || 'text'}" value="${f.value || ''}" placeholder="${f.placeholder || ''}" class="w-full mt-0.5 px-3 py-2 rounded-xl bg-slate-50 border border-pink-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-400">
+            </div>`;
+                }
+            });
+            fieldsHtml += `</div>`;
+
+            document.getElementById('sheet-desc').innerHTML = fieldsHtml;
+            const actions = document.getElementById('sheet-default-actions');
+            actions.className = "grid grid-cols-2 gap-2 mt-3";
+            actions.innerHTML = `
+        <button type="button" id="modal-submit-btn" class="py-2.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl text-xs font-extrabold shadow-md">${submitText}</button>
+        <button type="button" onclick="closeAllOverlays(); playAppSound('pop');" class="py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Hủy</button>
+      `;
+
+            document.getElementById('modal-submit-btn').onclick = () => {
+                const values = {};
+                fields.forEach(f => {
+                    const el = document.getElementById(`modal-field-${f.id}`);
+                    values[f.id] = el ? el.value.trim() : '';
+                });
+                closeAllOverlays();
+                playAppSound('success');
+                onSubmit(values);
+            };
+
+            document.getElementById('bottom-sheet').classList.remove('translate-y-full');
+        }
+
+        // --- 6. QUẢN LÝ CHUYỂN TAB ---
+        function switchTab(tab) {
+            closeAllOverlays();
+            sessionLoggedIn = true;
+            sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
+
+            if (tab !== 'locket') stopCameraStream();
+
+            const allTabs = ['guest-auth', 'auth', 'home', 'locket', 'chat', 'penalty', 'bento'];
+            allTabs.forEach(t => {
+                const viewEl = document.getElementById('view-' + t);
+                if (viewEl) viewEl.classList.add('hidden');
+                const nav = document.getElementById('nav-' + t);
+                if (nav) nav.className = "flex flex-col items-center text-slate-400 hover:text-slate-700 transition px-2 py-0.5";
+            });
+
+            document.getElementById('bottom-nav-bar').classList.remove('hidden');
+            document.getElementById('app-top-header').classList.remove('hidden');
+
+            const targetView = document.getElementById('view-' + tab);
+            if (targetView) targetView.classList.remove('hidden');
+
+            const activeNav = document.getElementById('nav-' + tab);
+            if (activeNav) activeNav.className = "flex flex-col items-center text-rose-600 scale-105 transition px-2 py-0.5";
+
+            const fab = document.getElementById('fab-btn');
+            if (fab) {
+                if (tab === 'chat' || tab === 'auth' || tab === 'penalty') fab.classList.add('hidden');
+                else fab.classList.remove('hidden');
+            }
+        }
+
+        // --- 7. ĐĂNG NHẬP, ĐĂNG KÝ & ĐỔI VAI TRÊN THIẾT BỊ ---
+        function setSessionRole(role) {
+            sessionRole = role;
+            sessionLoggedIn = true;
+            sessionStorage.setItem(SESSION_ROLE_KEY, role);
+            sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
+            localStorage.setItem('USVERSE_LAST_ROLE', role);
+        }
+
+        function quickSwitchRole() {
+            setSessionRole(sessionRole === 'boy' ? 'girl' : 'boy');
+            renderAll();
+            playAppSound('success');
+            showToast(`🔄 Đã chuyển thiết bị này sang: ${getSelf().name} ${getSelf().avatar}`);
+        }
+
+        function loginAsRole(role) {
+            setSessionRole(role);
+            renderAll();
+            switchTab('home');
+            showToast(`🔓 Chào mừng ${getSelf().name}!`);
+        }
+
+        // ★ Quick login: chỉ cho phép nếu tài khoản đã đăng ký (có email + pass)
+        function quickLoginAsRole(role) {
+            const acc = appState.accounts[role];
+            if (!acc.email || !acc.pass) {
+                playAppSound('pop');
+                showToast('⚠️ Tài khoản ' + (role === 'boy' ? 'Nam' : 'Nữ') + ' chưa được đăng ký! Hãy tạo tài khoản trước.');
+                switchGuestTab('register');
+                return;
+            }
+            playAppSound('success');
+            loginAsRole(role);
+        }
+
+        function handleLoginSubmit() {
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const pass = document.getElementById('login-pass').value;
+            const boyAcc = appState.accounts.boy;
+            const girlAcc = appState.accounts.girl;
+
+            // ★ Kiểm tra đã có tài khoản nào được đăng ký chưa
+            if (!boyAcc.email && !girlAcc.email) {
+                playAppSound('pop');
+                showToast('⚠️ Chưa có tài khoản nào! Hãy chuyển sang tab "Tạo TK Mới" để đăng ký.');
+                switchGuestTab('register');
+                return;
+            }
+
+            if (!email || !pass) {
+                playAppSound('pop');
+                showToast('⚠️ Vui lòng nhập Email và Mật khẩu!');
+                return;
+            }
+
+            if (email === girlAcc.email.toLowerCase() || email.includes('em')) {
+                if (!girlAcc.pass) {
+                    playAppSound('pop');
+                    showToast('⚠️ Tài khoản Nữ chưa được đăng ký!');
+                    return;
+                }
+                if (pass !== girlAcc.pass) {
+                    playAppSound('pop');
+                    showToast('❌ Sai mật khẩu tài khoản Nữ!');
+                    return;
+                }
+                loginAsRole('girl');
+            } else {
+                if (!boyAcc.pass) {
+                    playAppSound('pop');
+                    showToast('⚠️ Tài khoản Nam chưa được đăng ký!');
+                    return;
+                }
+                if (pass !== boyAcc.pass) {
+                    playAppSound('pop');
+                    showToast('❌ Sai mật khẩu tài khoản Nam!');
+                    return;
+                }
+                loginAsRole('boy');
+            }
+            playAppSound('success');
+        }
+
+        function handleRegisterSubmit() {
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-pass').value;
+            const roleRadio = document.querySelector('input[name="reg-role"]:checked');
+            const role = roleRadio ? roleRadio.value : 'boy';
+
+            if (!name || !email || pass.length < 6) {
+                playAppSound('pop');
+                showToast('⚠️ Vui lòng nhập đủ Biệt danh, Email và Mật khẩu >= 6 ký tự!');
+                return;
+            }
+
+            appState.accounts[role] = {
+                name,
+                email,
+                pass,
+                avatar: role === 'boy' ? '👦🏻' : '👧🏻'
+            };
+            saveState();
+            playAppSound('success');
+            loginAsRole(role);
+            switchTab('auth');
+            showToast(`🎉 Đã đăng ký tài khoản "${name}" thành công!`);
+        }
+
+        function handleForgotPassword() {
+            document.getElementById('forgot-pw-box').classList.remove('hidden');
+            showToast('📩 Mã OTP khôi phục của bạn là: 2010');
+        }
+
+        function confirmResetPassword() {
+            const otp = document.getElementById('otp-input').value.trim();
+            const newPass = document.getElementById('new-reset-pass').value.trim();
+            if (otp !== '2010') {
+                playAppSound('pop');
+                showToast('❌ Mã OTP không đúng! (Nhập: 2010)');
+                return;
+            }
+            if (newPass.length < 6) {
+                playAppSound('pop');
+                showToast('⚠️ Mật khẩu mới phải >= 6 ký tự!');
+                return;
+            }
+            appState.accounts.boy.pass = newPass;
+            appState.accounts.girl.pass = newPass;
+            saveState();
+            document.getElementById('login-pass').value = newPass;
+            document.getElementById('forgot-pw-box').classList.add('hidden');
+            playAppSound('success');
+            showToast('✅ Đã đặt lại mật khẩu mới thành công!');
+        }
+
+        function logoutAccount() {
+            stopCameraStream();
+            closeAllOverlays();
+            sessionLoggedIn = false;
+            sessionStorage.setItem(SESSION_AUTH_KEY, 'false');
+            ['auth', 'home', 'locket', 'chat', 'penalty', 'bento'].forEach(t => {
+                document.getElementById('view-' + t).classList.add('hidden');
+            });
+            document.getElementById('view-guest-auth').classList.remove('hidden');
+            document.getElementById('bottom-nav-bar').classList.add('hidden');
+            document.getElementById('fab-btn').classList.add('hidden');
+            document.getElementById('app-top-header').classList.add('hidden');
+            showToast('🚪 Đã đăng xuất khỏi thiết bị!');
+        }
+
+        function switchGuestTab(mode) {
+            ['login', 'register'].forEach(m => {
+                document.getElementById('guest-box-' + m).classList.add('hidden');
+                document.getElementById('guest-tab-' + m).className = "py-2 rounded-xl text-slate-600 hover:bg-pink-50 transition";
+            });
+            document.getElementById('guest-box-' + mode).classList.remove('hidden');
+            document.getElementById('guest-tab-' + mode).className = "py-2 rounded-xl bg-rose-500 text-white shadow transition";
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('login-pass');
+            const eyeBtn = document.getElementById('eye-btn');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeBtn.innerText = '🙈';
+            } else {
+                passInput.type = 'password';
+                eyeBtn.innerText = '👁️';
+            }
+        }
+
+        function openEditProfileModal() {
+            const self = getSelf();
+            const partner = getPartner();
+            openFormModal({
+                badge: '👤 CẬP NHẬT HỒ SƠ CẶP ĐÔI',
+                title: 'Chỉnh Sửa Biệt Danh & Avatar',
+                fields: [
+                    { id: 'selfName', label: 'Biệt danh của bạn', value: self.name },
+                    { id: 'selfAvatar', label: 'Emoji đại diện của bạn (VD: 👦🏻, 🤴🏻, 🐻)', value: self.avatar },
+                    { id: 'partnerName', label: 'Biệt danh của Người Yêu', value: partner.name },
+                    { id: 'partnerAvatar', label: 'Emoji của Người Yêu (VD: 👧🏻, 👸🏻, 🐰)', value: partner.avatar }
+                ],
+                submitText: '💾 Lưu Hồ Sơ',
+                onSubmit: (vals) => {
+                    if (vals.selfName) self.name = vals.selfName;
+                    if (vals.selfAvatar) self.avatar = vals.selfAvatar;
+                    if (vals.partnerName) partner.name = vals.partnerName;
+                    if (vals.partnerAvatar) partner.avatar = vals.partnerAvatar;
+                    saveState();
+                    renderAll();
+                    showToast('✨ Đã đồng bộ hồ sơ mới!');
+                }
+            });
+        }
+
+        function openEditAnniversaryModal() {
+            const curDate = appState.startDate.split('T')[0];
+            openFormModal({
+                badge: '💖 KỶ NIỆM TÌNH YÊU',
+                title: 'Chỉnh Ngày Bắt Đầu Yêu Nhau',
+                desc: 'Hệ thống sẽ tự động tính tổng số Ngày, Năm, Tháng, Giờ, Giây theo thời gian thực.',
+                fields: [
+                    { id: 'startDate', label: 'Ngày bắt đầu yêu', type: 'date', value: curDate }
+                ],
+                submitText: '💖 Lưu Ngày Yêu',
+                onSubmit: (vals) => {
+                    if (vals.startDate) {
+                        appState.startDate = vals.startDate + 'T00:00:00';
+                        saveState();
+                        renderAll();
+                        showToast('📅 Đã cập nhật ngày bắt đầu yêu!');
+                    }
+                }
+            });
+        }
+
+        function openUnpairModal() {
+            openBottomSheet(
+                '💔 Xác Nhận Hủy Ghép Đôi?',
+                'Hệ thống sẽ ngắt kết nối phòng hiện tại và tạo một mã phòng mới.',
+                `<div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="confirmUnpair();" class="py-2.5 bg-rose-600 text-white rounded-2xl text-xs font-extrabold shadow">💔 Đồng ý hủy</button>
+          <button type="button" onclick="closeAllOverlays(); playAppSound('pop');" class="py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Giữ kết nối</button>
+        </div>`,
+                '⚠️ CẢNH BÁO NGẮT KẾT NỐI'
+            );
+        }
+
+        function confirmUnpair() {
+            appState.roomCode = 'NEW-' + Math.floor(100 + Math.random() * 900);
+            appState.isPaired = false;
+            saveState();
+            renderAll();
+            closeAllOverlays();
+            playAppSound('pop');
+            showToast(`💔 Đã tạo mã phòng mới: ${appState.roomCode}`);
+        }
+
+        function simulatePartnerAcceptPair() {
+            const inputEl = document.getElementById('partner-code-input');
+            const code = (inputEl && inputEl.value.trim()) ? inputEl.value.trim().toUpperCase() : 'US-2010';
+            appState.roomCode = code;
+            appState.isPaired = true;
+            saveState();
+            pullFromCloud();
+            renderAll();
+            showToast(`💞 Đã kết nối vào phòng: ${code}!`);
+        }
+
+        let scrambleInterval = null;
+        function scrambleText() {
+            const el = document.getElementById('scramble-box');
+            const target = appState.roomCode || 'US-2010';
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(target).catch(() => { });
+            }
+            if (scrambleInterval) clearInterval(scrambleInterval);
+            let iter = 0;
+            scrambleInterval = setInterval(() => {
+                el.innerText = target.split('').map((l, i) => i < iter ? target[i] : chars[Math.floor(Math.random() * chars.length)]).join('');
+                if (iter >= target.length) {
+                    clearInterval(scrambleInterval);
+                    scrambleInterval = null;
+                    el.innerText = target;
+                    showToast('📋 Đã copy mã phòng: ' + target);
+                }
+                iter += 1 / 3;
+            }, 40);
+        }
+
+        // --- 8. PET MOCHI, MOOD, TÍN HIỆU 2 CHIỀU & RADIO ---
+        function changeMood(text) {
+            appState.mood = text;
+            saveState();
+            renderAll();
+            showToast('✨ Đã đồng bộ Mood: ' + text);
+        }
+
+        function petInteract() {
+            playAppSound('success');
+            spawnFallingHearts();
+            appState.pet.happy = Math.min(100, appState.pet.happy + 5);
+            appState.pet.exp += 10;
+            if (appState.pet.exp >= 100) {
+                appState.pet.level += 1;
+                appState.pet.exp = 0;
+                showToast(`🎉 Mochi đã thăng cấp lên Lv.${appState.pet.level}!`);
+            } else {
+                showToast(`🐱 Đã xoa đầu Mochi! (+5% Độ Vui • EXP ${appState.pet.exp}/100)`);
+            }
+            saveState();
+            renderAll();
+        }
+
+        function openCustomSignalModal() {
+            openFormModal({
+                badge: '⚡ BẮN TÍN HIỆU SANG MÁY KIA',
+                title: 'Nhập Yêu Cầu Gửi Người Yêu',
+                fields: [
+                    { id: 'title', label: 'Tiêu đề ngắn', value: 'Yêu Cầu Đặc Biệt 💌' },
+                    { id: 'desc', label: 'Nội dung nhắn nhủ', value: 'Tối nay qua đón em đi ăn kem nhé! 🍦' }
+                ],
+                submitText: '📡 Bắn Tín Hiệu',
+                onSubmit: (vals) => {
+                    if (vals.desc) triggerSignal(vals.title || 'Tín Hiệu Tình Yêu 💌', vals.desc);
+                }
+            });
+        }
+
+        function triggerSignal(title, desc) {
+            appState.chatMessages.push({
+                id: Date.now(),
+                sender: sessionRole,
+                type: 'text',
+                content: `⚡ [${title}]: ${desc}`,
+                recalled: false
+            });
+            saveState({ action: 'SIGNAL', title, desc });
+            renderAll();
+            showToast('📡 Đã bắn tín hiệu trực tiếp sang máy người yêu!');
+        }
+
+        function confirmSignalToChat(title, desc) {
+            appState.chatMessages.push({
+                id: Date.now(),
+                sender: sessionRole,
+                type: 'text',
+                content: `✅ [${title}]: ${desc}`,
+                recalled: false
+            });
+            saveState({ action: 'CHAT', preview: desc });
+            renderChatList();
+            closeAllOverlays();
+            playAppSound('success');
+            showToast('✅ Đã phản hồi vào khung Chat!');
+        }
+
+        let currentTrackIdx = 0;
+        let isRadioPlaying = false;
+        let lofiInterval = null;
+
+        function renderRadioPills() {
+            const container = document.getElementById('radio-pills-container');
+            if (!container) return;
+            if (currentTrackIdx >= appState.radioTracks.length) currentTrackIdx = 0;
+            container.innerHTML = appState.radioTracks.map((t, i) => `
+        <div class="inline-flex items-center shrink-0 rounded-full ${i === currentTrackIdx ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-300'}">
+          <button type="button" onclick="selectRadioTrack(${i}); playAppSound('pop');" class="px-2.5 py-1 text-[9px] font-extrabold">${t.pill}</button>
+          ${t.custom ? `<button type="button" onclick="deleteRadioTrack(${i});" class="pr-2 text-[10px] hover:text-amber-300">×</button>` : ''}
+        </div>
+      `).join('');
+            const track = appState.radioTracks[currentTrackIdx];
+            if (track) {
+                document.getElementById('radio-slot-label').innerText = track.slot;
+                document.getElementById('radio-track-title').innerText = track.title;
+                document.getElementById('island-marquee').innerHTML = `📻 ${track.title} • Bấm để Phát/Dừng nhạc • &nbsp;&nbsp;&nbsp;`;
+            }
+        }
+
+        function selectRadioTrack(idx) {
+            currentTrackIdx = (idx + appState.radioTracks.length) % appState.radioTracks.length;
+            renderRadioPills();
+        }
+        function prevRadioTrack() { selectRadioTrack(currentTrackIdx - 1); }
+        function nextRadioTrack() { selectRadioTrack(currentTrackIdx + 1); }
+
+        function deleteRadioTrack(idx) {
+            appState.radioTracks.splice(idx, 1);
+            currentTrackIdx = 0;
+            saveState();
+            renderRadioPills();
+            playAppSound('pop');
+            showToast('🗑️ Đã xóa mốc hẹn giờ Radio!');
+        }
+
+        function openAddRadioModal() {
+            openFormModal({
+                badge: '📻 THÊM MỐC PHÁT THANH RADIO',
+                title: 'Hẹn Giờ Phát Lời Nhắn Mới',
+                fields: [
+                    { id: 'pill', label: 'Khung giờ hiển thị', value: '🌇 17:30 Tan học' },
+                    { id: 'title', label: 'Lời nhắn phát thanh', value: 'Tan học chưa công chúa? Đợi ở cổng anh qua đón nhé!' }
+                ],
+                submitText: '🎙️ Thêm Vào Radio',
+                onSubmit: (vals) => {
+                    if (!vals.pill || !vals.title) return;
+                    appState.radioTracks.push({
+                        pill: vals.pill,
+                        slot: `📻 Hẹn giờ • ${vals.pill}`,
+                        title: vals.title,
+                        custom: true
+                    });
+                    currentTrackIdx = appState.radioTracks.length - 1;
+                    saveState();
+                    renderRadioPills();
+                    showToast('🎙️ Đã thêm mốc giờ phát Radio mới!');
+                }
+            });
+        }
+
+        function playLofiChord() {
+            try {
+                const ctx = getAudioCtx();
+                if (!ctx) return;
+                const notes = [261.63, 329.63, 392.00, 493.88, 523.25];
+                const freq = notes[Math.floor(Math.random() * notes.length)];
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.75);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.8);
+            } catch (e) { }
+        }
+
+        function toggleRadioPlay() {
+            isRadioPlaying = !isRadioPlaying;
+            const disc = document.getElementById('vinyl-disc');
+            const btn = document.getElementById('radio-play-btn');
+            if (isRadioPlaying) {
+                disc.classList.add('spin-slow');
+                btn.innerText = '⏸';
+                playLofiChord();
+                if (lofiInterval) clearInterval(lofiInterval);
+                lofiInterval = setInterval(playLofiChord, 900);
+                showToast('🎵 Đang phát Radio: ' + appState.radioTracks[currentTrackIdx].title);
+            } else {
+                disc.classList.remove('spin-slow');
+                btn.innerText = '▶';
+                if (lofiInterval) clearInterval(lofiInterval);
+                playAppSound('pop');
+                showToast('⏸ Đã tạm dừng Radio');
+            }
+        }
+
+        // --- 9. LOCKET CAM & TƯỜNG ẢNH KỶ NIỆM ---
+        let isFrontCam = true;
+        let mediaStream = null;
+        let rawUploadedImage = null;
+
+        function updateLocketFrameStyle() {
+            const val = document.getElementById('locket-frame-select').value;
+            const vf = document.getElementById('locket-viewfinder');
+            const badge = document.getElementById('locket-frame-live-badge');
+            badge.innerText = val;
+            if (val.includes('20/10')) {
+                vf.className = "aspect-square rounded-2xl border-4 border-pink-400 bg-gradient-to-tr from-rose-900 via-slate-900 to-amber-900/60 overflow-hidden relative flex flex-col justify-between p-3 transition-all";
+            } else if (val.includes('Trái Tim')) {
+                vf.className = "aspect-square rounded-2xl border-4 border-rose-500 bg-gradient-to-tr from-pink-900 via-rose-950 to-purple-900 overflow-hidden relative flex flex-col justify-between p-3 transition-all";
+            } else {
+                vf.className = "aspect-square rounded-2xl border-4 border-sky-400 bg-gradient-to-tr from-sky-900 via-slate-900 to-indigo-950 overflow-hidden relative flex flex-col justify-between p-3 transition-all";
+            }
+            playAppSound('pop');
+            showToast('🎨 Đã áp dụng khung: ' + val);
+        }
+
+        async function startCameraStream() {
+            const video = document.getElementById('locket-video');
+            const placeholder = document.getElementById('locket-placeholder');
+            const btnPower = document.getElementById('btn-cam-power');
+
+            clearUploadedLocketImage();
+            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast('ℹ️ Hãy chọn ảnh từ thư viện thiết bị!');
+                document.getElementById('locket-file-input').click();
+                return;
+            }
+
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: isFrontCam ? 'user' : { ideal: 'environment' }, width: 480, height: 480 },
+                    audio: false
+                });
+                video.srcObject = mediaStream;
+                video.classList.remove('hidden');
+                video.classList.toggle('mirror-video', isFrontCam);
+                placeholder.classList.add('hidden');
+                btnPower.innerText = '🔴 Tắt Cam';
+                btnPower.className = 'text-[9px] bg-rose-500/30 border border-rose-400 text-rose-200 px-2 py-0.5 rounded-full font-extrabold';
+                showToast(isFrontCam ? '📸 Đã bật Camera trước!' : '🌄 Đã bật Camera sau!');
+            } catch (err) {
+                showToast('ℹ️ Chưa cấp quyền Camera -> Hãy chọn ảnh từ máy hoặc bấm CHỤP!');
+            }
+        }
+
+        function stopCameraStream() {
+            try {
+                const video = document.getElementById('locket-video');
+                const placeholder = document.getElementById('locket-placeholder');
+                const btnPower = document.getElementById('btn-cam-power');
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+                if (video) video.classList.add('hidden');
+                if (placeholder && !rawUploadedImage) placeholder.classList.remove('hidden');
+                if (btnPower) {
+                    btnPower.innerText = '🎥 Bật Cam Thật';
+                    btnPower.className = 'text-[9px] bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 px-2 py-0.5 rounded-full font-extrabold';
+                }
+            } catch (e) { }
+        }
+
+        function toggleRealCamera() {
+            if (mediaStream) {
+                stopCameraStream();
+                showToast('⏹ Đã tắt Camera');
+            } else {
+                startCameraStream();
+            }
+        }
+
+        function flipCamera() {
+            isFrontCam = !isFrontCam;
+            document.getElementById('cam-facing-label').innerText = isFrontCam ? '📱 Cam trước' : '🌄 Cam sau';
+            document.getElementById('locket-preview-emoji').innerText = isFrontCam ? '👩‍❤️‍👨' : '🧋🍰';
+            if (mediaStream) startCameraStream();
+        }
+
+        function handleGalleryUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                stopCameraStream();
+                const img = new Image();
+                img.onload = function () {
+                    rawUploadedImage = img;
+                    const imgEl = document.getElementById('locket-uploaded-preview');
+                    imgEl.src = evt.target.result;
+                    imgEl.classList.remove('hidden');
+                    document.getElementById('locket-placeholder').classList.add('hidden');
+                    document.getElementById('btn-clear-uploaded').classList.remove('hidden');
+                    showToast('🖼️ Đã tải ảnh lên! Nhập caption rồi bấm CHỤP nhé.');
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        }
+
+        function clearUploadedLocketImage() {
+            rawUploadedImage = null;
+            const imgEl = document.getElementById('locket-uploaded-preview');
+            if (imgEl) {
+                imgEl.src = '';
+                imgEl.classList.add('hidden');
+            }
+            const btnClear = document.getElementById('btn-clear-uploaded');
+            if (btnClear) btnClear.classList.add('hidden');
+            if (!mediaStream) {
+                const ph = document.getElementById('locket-placeholder');
+                if (ph) ph.classList.remove('hidden');
+            }
+        }
+
+        function captureAndSendLocket() {
+            const caption = document.getElementById('locket-caption-input').value.trim() || 'Khoảnh khắc đáng yêu ❤️';
+            const frameBadge = document.getElementById('locket-frame-select').value;
+            const video = document.getElementById('locket-video');
+            const canvas = document.getElementById('locket-canvas');
+            const ctx = canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let hasVisualImage = false;
+            if (mediaStream && !video.classList.contains('hidden')) {
+                ctx.save();
+                if (isFrontCam) {
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                }
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+                hasVisualImage = true;
+            } else if (rawUploadedImage) {
+                ctx.drawImage(rawUploadedImage, 0, 0, canvas.width, canvas.height);
+                hasVisualImage = true;
+            }
+
+            let capturedDataUrl = '';
+            if (hasVisualImage) {
+                // Vẽ khung viền và chữ Caption lên bản chụp mới
+                ctx.strokeStyle = frameBadge.includes('20/10') ? '#f472b6' : (frameBadge.includes('Trái Tim') ? '#f43f5e' : '#38bdf8');
+                ctx.lineWidth = 14;
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.62)';
+                ctx.fillRect(14, canvas.height - 70, canvas.width - 28, 48);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(caption, canvas.width / 2, canvas.height - 40);
+                capturedDataUrl = canvas.toDataURL('image/jpeg', 0.72);
+            }
+
+            const newPhoto = {
+                id: Date.now(),
+                title: frameBadge,
+                caption,
+                camTag: isFrontCam ? 'Cam trước' : 'Cam sau',
+                time: 'Vừa xong',
+                likes: 1,
+                emoji: document.getElementById('locket-preview-emoji').innerText,
+                imgUrl: capturedDataUrl
+            };
+
+            appState.locketPhotos.unshift(newPhoto);
+            appState.coins += 25;
+            appState.streak += 1;
+            saveState({ action: 'LOCKET' });
+            renderAll();
+            spawnFallingHearts();
+            showToast(`📸 Đã đăng Locket! +25 Xu • Streak 🔥 ${appState.streak} Ngày`);
+        }
+
+        function renderLocketWall() {
+            const grid = document.getElementById('locket-masonry');
+            const countEl = document.getElementById('locket-total-count');
+            if (!grid) return;
+            if (countEl) countEl.innerText = appState.locketPhotos.length;
+
+            grid.innerHTML = appState.locketPhotos.map(p => {
+                const mediaHtml = p.imgUrl
+                    ? `<img src="${p.imgUrl}" onclick="openLightboxById(${p.id})" class="h-28 w-full object-cover rounded-xl cursor-pointer">`
+                    : `<div onclick="openLightboxById(${p.id})" class="h-24 rounded-xl bg-gradient-to-br from-pink-200 to-amber-200 flex items-center justify-center text-3xl cursor-pointer">${p.emoji || '👩‍❤️‍👨'}</div>`;
+
+                return `
+          <div class="masonry-item glass-card p-2 rounded-2xl border border-pink-200">
+            ${mediaHtml}
+            <div class="text-[11px] font-extrabold mt-1.5 truncate">${escapeHtml(p.caption)}</div>
+            <div class="flex justify-between items-center mt-1">
+              <span class="text-[9px] text-slate-500">${p.title}</span>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="likeLocketPhoto(${p.id})" class="text-[10px] bg-rose-50 px-2 py-0.5 rounded-full text-rose-600 font-bold">❤️ ${p.likes}</button>
+                <button type="button" onclick="deleteLocketPhoto(${p.id})" class="text-[10px] text-slate-400 hover:text-rose-600 px-1">×</button>
+              </div>
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        function openLightboxById(photoId) {
+            const p = appState.locketPhotos.find(item => item.id === photoId);
+            if (!p) return;
+            playAppSound('pop');
+            openLightbox(p.title, p.caption, p.emoji, p.imgUrl);
+        }
+
+        function likeLocketPhoto(photoId) {
+            const p = appState.locketPhotos.find(item => item.id === photoId);
+            if (!p) return;
+            p.likes += 1;
+            saveState();
+            renderLocketWall();
+            playAppSound('pop');
+        }
+
+        function deleteLocketPhoto(photoId) {
+            appState.locketPhotos = appState.locketPhotos.filter(item => item.id !== photoId);
+            saveState();
+            renderLocketWall();
+            playAppSound('pop');
+            showToast('🗑️ Đã xóa ảnh khỏi tường Locket!');
+        }
+
+        // --- 10. CHAT, THU ÂM GIỌNG NÓI THẬT (CHỐNG KẸT MICRO) & CUỘC GỌI ---
+        function renderChatList() {
+            const list = document.getElementById('chat-list');
+            if (!list) return;
+            const partner = getPartner();
+
+            list.innerHTML = appState.chatMessages.map(msg => {
+                const isMine = msg.sender === sessionRole;
+                if (msg.recalled) {
+                    return `
+            <div class="flex ${isMine ? 'justify-end' : 'justify-start'}">
+              <div class="bg-slate-100 border border-slate-200 text-slate-400 italic px-3 py-1.5 rounded-2xl text-[11px]">🚫 Tin nhắn đã được thu hồi</div>
+            </div>
+          `;
+                }
+
+                let bodyHtml = '';
+                if (msg.type === 'image') {
+                    bodyHtml = `<img src="${msg.content}" onclick="openLightbox('Ảnh trong Chat 📸', 'Bấm nút Tải về để lưu ảnh', '', '${msg.content}')" class="w-40 h-32 object-cover rounded-xl cursor-pointer">`;
+                } else if (msg.type === 'voice') {
+                    bodyHtml = `<audio controls src="${msg.content}" class="h-8 max-w-[185px]"></audio>`;
+                } else if (msg.type === 'voice_sample') {
+                    bodyHtml = `<div onclick="playLofiChord(); showToast('🎵 Đang phát tin nhắn thoại')" class="flex items-center gap-1.5 cursor-pointer"><span>▶</span><span>${escapeHtml(msg.content)}</span></div>`;
+                } else {
+                    bodyHtml = escapeHtml(msg.content);
+                }
+
+                if (isMine) {
+                    return `
+            <div class="flex justify-end items-center gap-1.5 group">
+              <button type="button" onclick="recallMessage(${msg.id})" class="text-[9px] text-slate-400 hover:text-rose-600 font-bold px-1.5 py-0.5 rounded bg-slate-100">Thu hồi</button>
+              <div class="bg-rose-500 text-white p-2.5 rounded-2xl rounded-br-none shadow-sm max-w-[78%] font-semibold break-words">${bodyHtml}</div>
+            </div>
+          `;
+                } else {
+                    return `
+            <div class="flex items-end gap-1.5">
+              <span class="text-sm shrink-0">${partner.avatar}</span>
+              <div class="bg-white border border-pink-100 p-2.5 rounded-2xl rounded-bl-none shadow-sm max-w-[78%] font-medium text-slate-800 break-words">${bodyHtml}</div>
+            </div>
+          `;
+                }
+            }).join('');
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const inp = document.getElementById('chat-input');
+            const text = inp.value.trim();
+            if (!text) return;
+            appState.chatMessages.push({
+                id: Date.now(),
+                sender: sessionRole,
+                type: 'text',
+                content: text,
+                recalled: false
+            });
+            inp.value = '';
+            saveState({ action: 'CHAT', preview: text });
+            renderChatList();
+        }
+
+        function recallMessage(msgId) {
+            const msg = appState.chatMessages.find(m => m.id === msgId);
+            if (msg) {
+                msg.recalled = true;
+                saveState();
+                renderChatList();
+                playAppSound('pop');
+                showToast('🔄 Đã thu hồi tin nhắn!');
+            }
+        }
+
+        function handleChatPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 360;
+                    let w = img.width, h = img.height;
+                    if (w > h && w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                    else if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    const compressed = canvas.toDataURL('image/jpeg', 0.7);
+
+                    appState.chatMessages.push({
+                        id: Date.now(),
+                        sender: sessionRole,
+                        type: 'image',
+                        content: compressed,
+                        recalled: false
+                    });
+                    saveState({ action: 'CHAT', preview: '[Đã gửi 1 ảnh]' });
+                    renderChatList();
+                    playAppSound('success');
+                    showToast('🖼️ Đã nén & gửi ảnh vào khung Chat!');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        let isHoldingRecord = false;
+        let voiceRecorder = null;
+        let voiceChunks = [];
+
+        async function startRealVoiceRecording(e) {
+            if (e) e.preventDefault();
+            if (isHoldingRecord) return;
+            isHoldingRecord = true;
+            playAppSound('pop');
+            document.getElementById('record-btn-text').innerText = '🔴 Đang thu âm... Nhả tay để Gửi';
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                if (!isHoldingRecord) {
+                    stream.getTracks().forEach(t => t.stop());
+                    document.getElementById('record-btn-text').innerText = '🎤 Giữ để thu âm giọng nói thật';
+                    return;
+                }
+                voiceRecorder = new MediaRecorder(stream);
+                voiceChunks = [];
+                voiceRecorder.ondataavailable = ev => voiceChunks.push(ev.data);
+                voiceRecorder.onstop = () => {
+                    stream.getTracks().forEach(t => t.stop());
+                    const blob = new Blob(voiceChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        appState.chatMessages.push({
+                            id: Date.now(),
+                            sender: sessionRole,
+                            type: 'voice',
+                            content: reader.result,
+                            recalled: false
+                        });
+                        saveState({ action: 'CHAT', preview: '[Tin nhắn thoại]' });
+                        renderChatList();
+                        showToast('🎙️ Đã gửi tin nhắn thoại thật!');
+                    };
+                    reader.readAsDataURL(blob);
+                };
+                voiceRecorder.start();
+            } catch (err) {
+                isHoldingRecord = false;
+                document.getElementById('record-btn-text').innerText = '🎤 Giữ để thu âm giọng nói thật';
+                appState.chatMessages.push({
+                    id: Date.now(),
+                    sender: sessionRole,
+                    type: 'voice_sample',
+                    content: 'Tin nhắn bộ đàm • 0:04s (Bấm nghe)',
+                    recalled: false
+                });
+                saveState({ action: 'CHAT', preview: '[Tin nhắn bộ đàm]' });
+                renderChatList();
+                showToast('🎙️ Đã gửi tin nhắn bộ đàm!');
+            }
+        }
+
+        function stopRealVoiceRecording(e) {
+            if (e) e.preventDefault();
+            if (!isHoldingRecord) return;
+            isHoldingRecord = false;
+            document.getElementById('record-btn-text').innerText = '🎤 Giữ để thu âm giọng nói thật';
+            if (voiceRecorder && voiceRecorder.state !== 'inactive') {
+                voiceRecorder.stop();
+            }
+        }
+
+        function broadcastTyping() {
+            if (syncChannel) {
+                syncChannel.postMessage({ type: 'TYPING', senderRole: sessionRole });
+            }
+        }
+
+        let partnerTypingTimer = null;
+        function showPartnerTypingIndicator() {
+            const bubble = document.getElementById('typing-indicator-bubble');
+            if (!bubble) return;
+            bubble.classList.remove('hidden');
+            clearTimeout(partnerTypingTimer);
+            partnerTypingTimer = setTimeout(() => bubble.classList.add('hidden'), 1800);
+        }
+
+        let callStream = null;
+        function openCallModal(mode) {
+            const partner = getPartner();
+            openBottomSheet(
+                mode === 'video' ? `🎥 Video Call với ${partner.name}` : `📞 Gọi thoại với ${partner.name}`,
+                `<div class="space-y-2 text-center">
+          <div class="relative h-44 rounded-2xl bg-slate-900 overflow-hidden flex flex-col items-center justify-center border border-pink-400">
+            <video id="sheet-call-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover hidden mirror-video"></video>
+            <div class="relative z-10 text-4xl mb-1 animate-bounce">${partner.avatar}</div>
+            <div class="relative z-10 text-xs font-bold text-white">${partner.name} ❤️</div>
+            <div class="relative z-10 text-[10px] text-emerald-400">Đang kết nối tín hiệu trực tiếp...</div>
+          </div>
+        </div>`,
+                `<div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="spawnFallingHearts(); playAppSound('success');" class="py-2.5 bg-pink-500 text-white rounded-2xl text-xs font-extrabold">💖 Thả Tim</button>
+          <button type="button" onclick="endCallModal();" class="py-2.5 bg-rose-600 text-white rounded-2xl text-xs font-extrabold">☎️ Kết Thúc</button>
+        </div>`,
+                '🔒 CUỘC GỌI RIÊNG TƯ'
+            );
+
+            if (mode === 'video' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(st => {
+                    callStream = st;
+                    const v = document.getElementById('sheet-call-video');
+                    if (v) { v.srcObject = st; v.classList.remove('hidden'); }
+                }).catch(() => { });
+            }
+        }
+
+        function endCallModal() {
+            if (callStream) {
+                callStream.getTracks().forEach(t => t.stop());
+                callStream = null;
+            }
+            closeAllOverlays();
+            playAppSound('pop');
+            showToast('☎️ Đã kết thúc cuộc gọi');
+        }
+
+        // --- 11. CỬA HÀNG XU ---
+        function openShopModal() {
+            openBottomSheet(
+                `🏪 Cửa Hàng Tình Yêu (Số dư: ${appState.coins} Xu)`,
+                `<div class="space-y-2 text-left">
+          <div class="flex items-center justify-between p-2.5 bg-amber-50 rounded-2xl border border-amber-200">
+            <div>
+              <div class="font-extrabold text-slate-800 text-xs">🧋 Trà Sữa Cho Mochi</div>
+              <div class="text-[10px] text-slate-500">+30% Độ No & +25 EXP Lên Cấp</div>
+            </div>
+            <button type="button" onclick="buyShopItem('Trà Sữa Mochi', 50, true)" class="px-3 py-1.5 bg-amber-500 text-white rounded-xl text-[10px] font-extrabold shadow">Mua (50 Xu)</button>
+          </div>
+          <div class="flex items-center justify-between p-2.5 bg-rose-50 rounded-2xl border border-rose-200">
+            <div>
+              <div class="font-extrabold text-slate-800 text-xs">🎫 Thẻ "Tha Thứ Vô Điều Kiện"</div>
+              <div class="text-[10px] text-slate-500">Gửi thẳng vào khung Chat</div>
+            </div>
+            <button type="button" onclick="buyShopItem('Thẻ Tha Thứ Vô Điều Kiện', 100, false)" class="px-3 py-1.5 bg-rose-500 text-white rounded-xl text-[10px] font-extrabold shadow">Mua (100 Xu)</button>
+          </div>
+          <div class="flex items-center justify-between p-2.5 bg-purple-50 rounded-2xl border border-purple-200">
+            <div>
+              <div class="font-extrabold text-slate-800 text-xs">💆🏻‍♀️ Voucher "Đấm Lưng 15p"</div>
+              <div class="text-[10px] text-slate-500">Tặng người yêu trong khung Chat</div>
+            </div>
+            <button type="button" onclick="buyShopItem('Voucher Đấm Lưng 15p', 150, false)" class="px-3 py-1.5 bg-purple-600 text-white rounded-xl text-[10px] font-extrabold shadow">Mua (150 Xu)</button>
+          </div>
+        </div>`,
+                `<button type="button" onclick="closeAllOverlays(); playAppSound('pop');" class="col-span-2 py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Đóng Cửa Hàng</button>`,
+                '🪙 TIÊU XU ĐỔI ĐẶC QUYỀN'
+            );
+        }
+
+        function buyShopItem(itemName, cost, isPetFood) {
+            if (appState.coins < cost) {
+                playAppSound('pop');
+                showToast(`⚠️ Bạn chỉ còn ${appState.coins} Xu (Cần ${cost} Xu)!`);
+                return;
+            }
+            appState.coins -= cost;
+            if (isPetFood) {
+                appState.pet.hunger = Math.min(100, appState.pet.hunger + 30);
+                appState.pet.exp += 25;
+                if (appState.pet.exp >= 100) {
+                    appState.pet.level += 1;
+                    appState.pet.exp -= 100;
+                }
+            } else {
+                appState.chatMessages.push({
+                    id: Date.now(),
+                    sender: sessionRole,
+                    type: 'text',
+                    content: `🎁 [Đã tặng ${itemName} (-${cost} Xu)]`,
+                    recalled: false
+                });
+            }
+            saveState({ action: 'CHAT', preview: `Đã mua ${itemName}` });
+            renderAll();
+            closeAllOverlays();
+            spawnFallingHearts();
+            playAppSound('success');
+            showToast(`🎉 Đã mua "${itemName}" thành công!`);
+        }
+
+        // --- 12. SỔ ĐEN DỖI & PHẠT ---
+        function setQuickPenalty(text) {
+            document.getElementById('grudge-penalty').value = text;
+        }
+
+        function spinPenaltyRoulette() {
+            const penalties = [
+                '🧋 Mua ngay 2 ly Trà sữa full topping ít đá',
+                '🥩 Bao 1 chầu thịt nướng Hàn Quốc cuối tuần này',
+                '🙇🏻‍♂️ Đấm lưng 20 phút + Thơm má 10 cái không được cãi',
+                '💸 Nộp phạt nóng 50 Xu + Viết tâm thư làm lành',
+                '🛵 Đèo đi lượn phố + Chụp Photobooth Hàn Quốc'
+            ];
+            const pick = penalties[Math.floor(Math.random() * penalties.length)];
+            const inputEl = document.getElementById('grudge-penalty');
+            if (inputEl) inputEl.value = pick;
+            openBottomSheet(
+                '🎲 Vòng Quay Hình Phạt Tình Yêu',
+                `Hệ thống đã quay trúng hình phạt:\n👉 "${pick}"`,
+                `<button type="button" onclick="closeAllOverlays(); playAppSound('pop');" class="col-span-2 py-2.5 bg-rose-500 text-white rounded-2xl text-xs font-extrabold">OK, Đã điền vào Sổ Đen!</button>`
+            );
+        }
+
+        function addGrudgeNote() {
+            const offender = document.getElementById('grudge-offender').value;
+            const level = document.getElementById('grudge-level').value;
+            const reasonInput = document.getElementById('grudge-reason');
+            const reason = reasonInput.value.trim() || 'Làm người yêu dỗi không lý do 😤';
+            const penalty = document.getElementById('grudge-penalty').value.trim() || '🧋 Mua trà sữa chuộc lỗi';
+
+            appState.grudges.unshift({
+                id: Date.now(),
+                offender,
+                level,
+                reason,
+                penalty,
+                coinCost: penalty.includes('50 Xu') ? 50 : 0,
+                time: 'Vừa xong',
+                status: 'active'
+            });
+
+            appState.mood = '😤 Đang dỗi đấy';
+            appState.chatMessages.push({
+                id: Date.now() + 1,
+                sender: sessionRole,
+                type: 'text',
+                content: `🚨 [SỔ ĐEN]: ${offender} (${level}) — Lý do: ${reason} | Phạt: ${penalty}`,
+                recalled: false
+            });
+
+            reasonInput.value = '';
+            saveState({ action: 'GRUDGE' });
+            renderAll();
+            showToast('🚨 Đã ghi Sổ Đen & bắn thông báo sang máy người yêu!');
+        }
+
+        function renderPenaltyList() {
+            const list = document.getElementById('penalty-list');
+            if (!list) return;
+
+            const activeCount = appState.grudges.filter(g => g.status === 'active').length;
+            const resolvedCount = appState.resolvedHistoryCount || 0;
+            const total = activeCount + resolvedCount;
+            const rate = total > 0 ? Math.round((resolvedCount / total) * 100) : 100;
+
+            document.getElementById('home-active-grudges').innerText = activeCount;
+            document.getElementById('stat-active-grudges').innerText = `${activeCount} vụ`;
+            document.getElementById('stat-resolved-grudges').innerText = `${resolvedCount} vụ`;
+            document.getElementById('stat-harmony-rate').innerText = `${rate}%`;
+
+            list.innerHTML = appState.grudges.map(g => {
+                const isResolved = g.status === 'resolved';
+                const borderCol = isResolved ? 'border-emerald-500 opacity-85' : (g.level.includes('Cấp 3') ? 'border-purple-600' : 'border-rose-500');
+                return `
+          <div class="glass-card p-3 rounded-2xl border-l-4 ${borderCol} space-y-1.5">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-extrabold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">${g.level}</span>
+              <span class="text-[9px] font-bold text-slate-400">${g.offender} • ${g.time}</span>
+            </div>
+            <div class="text-xs font-extrabold text-slate-800">Lý do: ${escapeHtml(g.reason)}</div>
+            <div class="text-[11px] font-bold text-amber-800 bg-amber-50 p-2 rounded-xl border border-amber-200">
+              🔨 Hình phạt: ${escapeHtml(g.penalty)}
+            </div>
+            <div class="flex justify-between items-center pt-1">
+              <span class="text-[10px] font-extrabold ${isResolved ? 'text-emerald-600' : 'text-rose-600'}">
+                ${isResolved ? '💖 Đã dỗ ngọt & Làm hòa!' : '⏳ Chưa chịu phạt (Đang dỗi)'}
+              </span>
+              <div class="flex gap-1">
+                ${!isResolved ? `<button type="button" onclick="resolveGrudge(${g.id})" class="px-2.5 py-1 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[10px] font-extrabold shadow">🙇🏻‍♂️ Chịu phạt & Làm hòa</button>` : ''}
+                <button type="button" onclick="deleteGrudge(${g.id})" class="px-2 py-1 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-bold">Xóa</button>
+              </div>
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        function resolveGrudge(id) {
+            const g = appState.grudges.find(item => item.id === id);
+            if (!g || g.status === 'resolved') return;
+            if (g.coinCost > 0 && appState.coins >= g.coinCost) {
+                appState.coins -= g.coinCost;
+            }
+            g.status = 'resolved';
+            appState.resolvedHistoryCount = (appState.resolvedHistoryCount || 0) + 1;
+            appState.mood = '🥰 Đang yêu đời';
+            appState.chatMessages.push({
+                id: Date.now(),
+                sender: sessionRole,
+                type: 'text',
+                content: `💖 [ĐÃ LÀM HÒA]: Hoàn tất hình phạt "${g.penalty}"! Hết giận nhau rồi nhé 🥰`,
+                recalled: false
+            });
+            saveState({ action: 'CHAT', preview: 'Đã chịu phạt & làm hòa ❤️' });
+            renderAll();
+            spawnFallingHearts();
+            playAppSound('success');
+            showToast('💖 Đã chịu phạt & làm hòa thành công!');
+        }
+
+        function deleteGrudge(id) {
+            appState.grudges = appState.grudges.filter(item => item.id !== id);
+            saveState();
+            renderPenaltyList();
+            playAppSound('pop');
+            showToast('🗑️ Đã xóa bản ghi khỏi Sổ Đen!');
+        }
+
+        // --- 13. TAB 5: KỶ NIỆM, Q&A, LỊCH, GIẤY NHỚ, MINI GAMES & TIME-CAPSULE ---
+        const dailyQuestions = [
+            '"Khoảnh khắc nào tuần này làm bạn thấy yêu đối phương nhất?"',
+            '"Món ăn nào hai đứa nhất định phải đi ăn cùng nhau cuối tuần này?"',
+            '"Ấn tượng đầu tiên của bạn khi mới quen nửa kia là gì?"',
+            '"Địa điểm du lịch tiếp theo hai đứa muốn nắm tay nhau đi là đâu?"'
+        ];
+
+        function renderBentoTab() {
+            const qIdx = (appState.qa.qIdx || 0) % dailyQuestions.length;
+            document.getElementById('qa-question-text').innerText = dailyQuestions[qIdx];
+
+            const qaArea = document.getElementById('qa-interactive-area');
+            const myCurrentAns = sessionRole === 'boy' ? appState.qa.boyAns : appState.qa.girlAns;
+
+            if (appState.qa.revealed) {
+                qaArea.innerHTML = `
+          <div class="w-full bg-black/25 p-2.5 rounded-2xl text-[11px] space-y-1">
+            <div>👦🏻 <b>${appState.accounts.boy.name}:</b> "${appState.qa.boyAns || 'Yêu công chúa nhất trên đời ❤️'}"</div>
+            <div>👧🏻 <b>${appState.accounts.girl.name}:</b> "${appState.qa.girlAns || 'Lúc anh nhớ mua trà sữa ít đá cho em 🥰'}"</div>
+            <button type="button" onclick="editDailyQAAnswer()" class="mt-1 text-[10px] underline text-amber-300">✏️ Sửa câu trả lời của bạn</button>
+          </div>
+        `;
+            } else {
+                qaArea.innerHTML = `
+          <div class="flex gap-1.5">
+            <input id="qa-input" type="text" value="${myCurrentAns || ''}" placeholder="Nhập câu trả lời của ${getSelf().name}..." class="flex-1 px-3 py-1.5 rounded-xl bg-white/20 text-white placeholder-purple-200 text-xs focus:outline-none">
+            <button type="button" onclick="submitDailyQA(); playAppSound('success');" class="px-3 py-1.5 bg-white text-purple-700 rounded-xl text-[11px] font-extrabold shrink-0">Gửi & Mở</button>
+          </div>
+        `;
+            }
+
+            document.getElementById('calendar-list').innerHTML = appState.calendarEvents.map(ev => `
+        <div class="${ev.bg || 'bg-pink-50'} p-1.5 rounded-lg flex justify-between items-center gap-1">
+          <span class="truncate">${ev.text}</span>
+          <button type="button" onclick="deleteCalendarEvent(${ev.id})" class="text-rose-400 hover:text-rose-600 font-bold px-1">×</button>
+        </div>
+      `).join('');
+
+            document.getElementById('notes-list').innerHTML = appState.stickyNotes.map(n => `
+        <div class="flex items-center justify-between gap-1">
+          <label class="flex items-center gap-1 cursor-pointer truncate flex-1">
+            <input type="checkbox" ${n.done ? 'checked' : ''} onchange="toggleStickyNote(${n.id})" class="accent-rose-500">
+            <span class="${n.done ? 'line-through text-slate-400' : ''} truncate">${n.text}</span>
+          </label>
+          <button type="button" onclick="deleteStickyNote(${n.id})" class="text-amber-700 hover:text-rose-600 font-bold px-1">×</button>
+        </div>
+      `).join('');
+
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            document.getElementById('capsule-list').innerHTML = appState.capsules.map(c => {
+                const target = new Date(c.openDate + 'T00:00:00');
+                const diffDays = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+                const isLocked = diffDays > 0;
+                return `
+          <div onclick="openTimeCapsule(${c.id})" class="bg-slate-900 text-white p-2.5 rounded-2xl flex items-center justify-between cursor-pointer hover:scale-[1.01] transition">
+            <div class="truncate pr-2">
+              <div class="text-[11px] font-extrabold ${isLocked ? 'text-amber-300' : 'text-emerald-300'} truncate">${isLocked ? '🔒' : '🔓'} ${c.title}</div>
+              <div class="text-[9px] text-slate-400">Mở khóa: ${target.toLocaleDateString('vi-VN')}</div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <span class="bg-amber-500/20 border border-amber-400/40 text-amber-300 px-2 py-1 rounded-xl text-[10px] font-black font-mono">
+                ${isLocked ? `⏳ Còn ${diffDays} ngày` : '✨ Mở ngay'}
+              </span>
+              <button type="button" onclick="event.stopPropagation(); deleteTimeCapsule(${c.id})" class="text-slate-400 hover:text-rose-400 px-1">×</button>
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        function nextDailyQuestion() {
+            appState.qa.qIdx = ((appState.qa.qIdx || 0) + 1) % dailyQuestions.length;
+            appState.qa.revealed = false;
+            saveState();
+            renderBentoTab();
+            showToast('🔄 Đã đổi câu hỏi cặp đôi mới!');
+        }
+
+        function submitDailyQA() {
+            const inp = document.getElementById('qa-input');
+            const ans = inp ? inp.value.trim() : '';
+            if (!ans) {
+                showToast('✍️ Hãy nhập câu trả lời của bạn trước nhé!');
+                return;
+            }
+            if (sessionRole === 'boy') appState.qa.boyAns = ans;
+            else appState.qa.girlAns = ans;
+            appState.qa.revealed = true;
+            saveState();
+            renderBentoTab();
+            spawnFallingHearts();
+            showToast('🔓 Đã mở khóa câu trả lời của cả hai!');
+        }
+
+        function editDailyQAAnswer() {
+            appState.qa.revealed = false;
+            renderBentoTab();
+        }
+
+        function openAddCalendarModal() {
+            openFormModal({
+                badge: '📅 THÊM LỊCH HẸN MỚI',
+                title: 'Thêm Sự Kiện Cặp Đôi',
+                fields: [
+                    { id: 'text', label: 'Ngày & Sự kiện', value: '🍿 25/10: Xem phim rạp tối thứ 7' }
+                ],
+                submitText: '📅 Lưu Lịch Hẹn',
+                onSubmit: (vals) => {
+                    if (vals.text) {
+                        appState.calendarEvents.push({ id: Date.now(), text: vals.text, bg: 'bg-pink-50' });
+                        saveState();
+                        renderBentoTab();
+                        showToast('📅 Đã thêm lịch hẹn mới!');
+                    }
+                }
+            });
+        }
+
+        function deleteCalendarEvent(id) {
+            appState.calendarEvents = appState.calendarEvents.filter(e => e.id !== id);
+            saveState();
+            renderBentoTab();
+            playAppSound('pop');
+        }
+
+        function openAddNoteModal() {
+            openFormModal({
+                badge: '📝 THÊM GIẤY NHỚ CHUNG',
+                title: 'Thêm Việc Cần Làm Cùng Nhau',
+                fields: [
+                    { id: 'text', label: 'Nội dung ghi chú', value: 'Mua đồ đôi mùa đông 🧥' }
+                ],
+                submitText: '📝 Dán Giấy Nhớ',
+                onSubmit: (vals) => {
+                    if (vals.text) {
+                        appState.stickyNotes.push({ id: Date.now(), text: vals.text, done: false });
+                        saveState();
+                        renderBentoTab();
+                        showToast('📝 Đã thêm giấy nhớ!');
+                    }
+                }
+            });
+        }
+
+        function toggleStickyNote(id) {
+            const n = appState.stickyNotes.find(item => item.id === id);
+            if (n) {
+                n.done = !n.done;
+                saveState();
+                renderBentoTab();
+                playAppSound('pop');
+            }
+        }
+
+        function deleteStickyNote(id) {
+            appState.stickyNotes = appState.stickyNotes.filter(item => item.id !== id);
+            saveState();
+            renderBentoTab();
+            playAppSound('pop');
+        }
+
+        function toggleCapsuleForm() {
+            document.getElementById('capsule-form').classList.toggle('hidden');
+        }
+
+        function addTimeCapsule() {
+            const title = document.getElementById('capsule-title').value.trim() || 'Thư gửi tương lai';
+            const openDate = document.getElementById('capsule-date').value || '2027-10-20';
+            const msg = document.getElementById('capsule-msg').value.trim() || 'Mong chúng mình mãi hạnh phúc bên nhau ❤️';
+
+            appState.capsules.unshift({ id: Date.now(), title, openDate, msg });
+            document.getElementById('capsule-form').classList.add('hidden');
+            saveState();
+            renderBentoTab();
+            showToast('⏳ Đã niêm phong Hộp thư tương lai!');
+        }
+
+        function openTimeCapsule(id) {
+            const c = appState.capsules.find(item => item.id === id);
+            if (!c) return;
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            const target = new Date(c.openDate + 'T00:00:00');
+            const diffDays = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 0) {
+                playAppSound('pop');
+                openBottomSheet(
+                    `🔒 ${c.title} (Đang Khóa)`,
+                    `Hộp thư này được niêm phong đến ngày ${target.toLocaleDateString('vi-VN')}.\n⏳ Còn đúng ${diffDays} ngày nữa mới được phép mở khóa nội dung!`,
+                    `<button type="button" onclick="closeAllOverlays(); playAppSound('pop');" class="col-span-2 py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Đã hiểu</button>`,
+                    '⏳ CHƯA ĐẾN HẠN MỞ THƯ'
+                );
+            } else {
+                playAppSound('success');
+                spawnFallingHearts();
+                openBottomSheet(
+                    `🔓 ${c.title}`,
+                    `💌 Nội dung bức thư:\n\n"${c.msg}"`,
+                    `<button type="button" onclick="closeAllOverlays();" class="col-span-2 py-2.5 bg-rose-500 text-white rounded-2xl text-xs font-extrabold">Đóng thư</button>`,
+                    '✨ HỘP THƯ ĐÃ MỞ KHÓA'
+                );
+            }
+        }
+
+        function deleteTimeCapsule(id) {
+            appState.capsules = appState.capsules.filter(item => item.id !== id);
+            saveState();
+            renderBentoTab();
+            playAppSound('pop');
+        }
+
+        // --- 14. MINI GAMES & QUÀ TẶNG 20/10 ---
+        function spinFoodWheel() {
+            const foods = ['🥩 Nướng Hàn Quốc', '🍲 Lẩu Mala', '🧋 Trà Sữa Full Topping', '🍜 Mì Cay 7 Cấp Độ'];
+            const pick = foods[Math.floor(Math.random() * foods.length)];
+            openBottomSheet(
+                '🎡 Vòng Quay Hôm Nay Ăn Gì?',
+                `Kết quả chốt đơn hôm nay là:\n👉 ${pick}!`,
+                `<button type="button" onclick="confirmSignalToChat('Vòng quay Ăn Gì', 'Chốt đi ăn ${pick} nha!');" class="py-2.5 bg-rose-500 text-white rounded-2xl text-xs font-extrabold">✅ Gửi vào Chat</button>
+         <button type="button" onclick="closeAllOverlays();" class="py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Đóng</button>`
+            );
+        }
+
+        function playTruthOrDare() {
+            const cards = [
+                '💌 THẬT: Điều gì ở đối phương làm bạn rung động nhất từ lần đầu gặp?',
+                '🔥 THÁCH: Giữ nút thu âm trong khung Chat và gửi ngay câu "Yêu đằng ấy nhất!"',
+                '💌 THẬT: Kể tên kỷ niệm đi chơi làm bạn nhớ mãi không quên?'
+            ];
+            openBottomSheet(
+                '🃏 Lá Bài Thật Hay Thách',
+                cards[Math.floor(Math.random() * cards.length)],
+                `<button type="button" onclick="closeAllOverlays();" class="col-span-2 py-2.5 bg-rose-500 text-white rounded-2xl text-xs font-extrabold">Chấp nhận thử thách!</button>`
+            );
+        }
+
+        const quizBank = [
+            { id: 'q1', q: 'Món đồ uống yêu thích nhất khi đi chơi cùng nhau là gì?', opts: ['A. Nước lọc', 'B. Trà sữa Ô long nhài sữa ít đá 🧋', 'C. Cà phê đắng'], ans: 1 },
+            { id: 'q2', q: 'Địa điểm săn mây lãng mạn hai đứa lên lịch đi cùng nhau?', opts: ['A. Tam Đảo 🏔️', 'B. Ở nhà ngủ', 'C. Đi siêu thị'], ans: 0 },
+            { id: 'q3', q: 'Khi nửa kia bảo "Không sao đâu", thực ra là gì?', opts: ['A. Đang vui', 'B. Đang dỗi đấy, mau dỗ ngọt đi! 🥺', 'C. Đang buồn ngủ'], ans: 1 }
+        ];
+        let curQuizIdx = 0;
+
+        function playCoupleQuiz() {
+            const item = quizBank[curQuizIdx % quizBank.length];
+            const done = (appState.quizAnswered || []).includes(item.id);
+            openBottomSheet(
+                `❓ Trắc Nghiệm Hiểu Nhau (${curQuizIdx + 1}/${quizBank.length})`,
+                `<div class="space-y-2 text-left">
+          <div class="font-bold text-slate-800">${item.q}</div>
+          <div class="text-[10px] font-bold ${done ? 'text-emerald-600' : 'text-amber-600'}">${done ? '✅ Đã nhận thưởng câu này' : '🎁 Trả lời đúng nhận +20 Xu'}</div>
+          ${item.opts.map((o, idx) => `<button type="button" onclick="answerQuiz(${idx})" class="w-full text-left p-2 rounded-xl bg-slate-50 hover:bg-pink-50 border border-pink-200 text-xs font-bold">${o}</button>`).join('')}
+        </div>`,
+                `<button type="button" onclick="curQuizIdx++; playCoupleQuiz();" class="py-2 bg-indigo-600 text-white rounded-2xl text-xs font-extrabold">Câu tiếp ➔</button>
+         <button type="button" onclick="closeAllOverlays();" class="py-2 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Đóng</button>`
+            );
+        }
+
+        function answerQuiz(choice) {
+            const item = quizBank[curQuizIdx % quizBank.length];
+            if (choice === item.ans) {
+                playAppSound('success');
+                if (!appState.quizAnswered.includes(item.id)) {
+                    appState.quizAnswered.push(item.id);
+                    appState.coins += 20;
+                    saveState();
+                    renderAll();
+                    showToast('🎉 Chính xác! +20 Xu Tình Yêu!');
+                } else {
+                    showToast('💖 Chính xác! Bấm "Câu tiếp" để chơi câu mới nhé.');
+                }
+                playCoupleQuiz();
+            } else {
+                playAppSound('pop');
+                showToast('🙊 Chưa đúng rồi, thử lại nhé!');
+            }
+        }
+
+        function open2010GiftModal() {
+            spawnFallingHearts();
+            openBottomSheet(
+                '💐 Chúc Mừng Ngày Phụ Nữ Việt Nam 20/10 ❤️',
+                `Gửi ${appState.accounts.girl.name} yêu thương,\n\nCảm ơn em đã luôn ở bên cạnh anh. Chúc công chúa của anh ngày 20/10 và mỗi ngày đều tràn ngập niềm vui, luôn xinh đẹp rạng rỡ và hạnh phúc trong không gian UsVerse của tụi mình nhé! 💖`,
+                `<button type="button" onclick="spawnFallingHearts(); closeAllOverlays();" class="col-span-2 py-2.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl text-xs font-extrabold shadow-md">🥰 Yêu Anh Nhiều Lắm!</button>`,
+                '🎁 MÓN QUÀ ĐẶC BIỆT DÀNH TẶNG EM'
+            );
+        }
+
+        function spawnFallingHearts() {
+            const frame = document.getElementById('phone-frame');
+            const icons = ['❤️', '💖', '🌸', '✨', '💝'];
+            for (let i = 0; i < 14; i++) {
+                const el = document.createElement('div');
+                el.className = 'falling-heart text-lg';
+                el.innerText = icons[Math.floor(Math.random() * icons.length)];
+                el.style.left = Math.floor(Math.random() * 90) + '%';
+                el.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+                frame.appendChild(el);
+                setTimeout(() => el.remove(), 3500);
+            }
+        }
+
+        async function fullResetAllData() {
+            try {
+                // 1. Xóa dữ liệu trên Firebase Cloud
+                if (cloudDbUrl && appState.roomCode) {
+                    const cleanUrl = cloudDbUrl.replace(/\/$/, '');
+                    await fetch(`${cleanUrl}/rooms/${appState.roomCode}.json`, { method: 'DELETE' });
+                }
+                // 2. Xóa IndexedDB
+                try {
+                    const db = await openIDB();
+                    const tx = db.transaction(IDB_STORE, 'readwrite');
+                    tx.objectStore(IDB_STORE).clear();
+                    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+                    db.close();
+                } catch (e) { }
+                // 3. Xóa sessionStorage backup
+                sessionStorage.removeItem('usverse_ss_backup');
+                // 4. Xóa localStorage
+                localStorage.removeItem(ROOM_STATE_KEY);
+                // 5. Reload — sẽ tạo defaultRoomState mới hoàn toàn
+                location.reload();
+            } catch (e) {
+                // Nếu cloud lỗi vẫn xóa local
+                sessionStorage.removeItem('usverse_ss_backup');
+                localStorage.removeItem(ROOM_STATE_KEY);
+                location.reload();
+            }
+        }
+
+        function openResetConfirmModal() {
+            openBottomSheet(
+                '🗑️ Xóa Sạch & Bắt Đầu Mới?',
+                '⚠️ Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn: chat, ảnh locket, sổ đen, xu, pet... kể cả dữ liệu trên Cloud. Hành động này KHÔNG THỂ hoàn tác!',
+                `<div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="fullResetAllData();" class="py-2.5 bg-rose-600 text-white rounded-2xl text-xs font-extrabold">🗑️ Xóa hết & Bắt đầu mới</button>
+          <button type="button" onclick="closeAllOverlays();" class="py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Hủy bỏ</button>
+        </div>`
+            );
+        }
+
+        // --- 15. TIỆN ÍCH OVERLAY, TOAST & LIGHTBOX ---
+        let toastTimer;
+        function showToast(msg) {
+            const box = document.getElementById('toast-box');
+            document.getElementById('toast-text').innerText = msg;
+            box.classList.remove('opacity-0', '-translate-y-4');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => box.classList.add('opacity-0', '-translate-y-4'), 2600);
+        }
+
+        function showScrim() {
+            document.getElementById('scrim').classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeAllOverlays() {
+            document.getElementById('scrim').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('bottom-sheet').classList.add('translate-y-full');
+            document.getElementById('side-drawer').classList.add('-translate-x-full');
+            document.getElementById('lightbox').classList.add('opacity-0', 'pointer-events-none', 'scale-90');
+        }
+
+        function openBottomSheet(title, desc, actionsHtml = null, badgeText = '🚨 TƯƠNG TÁC TRỰC TIẾP 2 CHIỀU') {
+            showScrim();
+            document.getElementById('sheet-badge').innerText = badgeText;
+            document.getElementById('sheet-title').innerText = title;
+            document.getElementById('sheet-desc').innerHTML = desc;
+            const actions = document.getElementById('sheet-default-actions');
+            actions.className = "grid grid-cols-2 gap-2 mt-3";
+            actions.innerHTML = actionsHtml || `
+        <button type="button" onclick="closeAllOverlays(); playAppSound('success');" class="py-2.5 bg-rose-500 text-white rounded-2xl text-xs font-extrabold shadow-md">✅ Đồng ý</button>
+        <button type="button" onclick="closeAllOverlays(); playAppSound('pop');" class="py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-xs font-extrabold">Đóng</button>
+      `;
+            document.getElementById('bottom-sheet').classList.remove('translate-y-full');
+        }
+
+        function toggleDrawer(open) {
+            if (open) {
+                showScrim();
+                document.getElementById('side-drawer').classList.remove('-translate-x-full');
+            } else {
+                closeAllOverlays();
+            }
+        }
+
+        function openLightbox(title, desc, emoji, imgUrl = '') {
+            showScrim();
+            document.getElementById('lb-title').innerText = title;
+            document.getElementById('lb-desc').innerText = desc;
+            const imgEl = document.getElementById('lb-img');
+            const emojiEl = document.getElementById('lb-emoji');
+            const dlBtn = document.getElementById('lb-download-btn');
+
+            if (imgUrl) {
+                imgEl.src = imgUrl;
+                imgEl.classList.remove('hidden');
+                emojiEl.classList.add('hidden');
+                dlBtn.href = imgUrl;
+                dlBtn.classList.remove('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                emojiEl.classList.remove('hidden');
+                emojiEl.innerText = emoji || '🏔️';
+                dlBtn.classList.add('hidden');
+            }
+            document.getElementById('lightbox').classList.remove('opacity-0', 'pointer-events-none', 'scale-90');
+        }
+
+        const phrases = [
+            '"Meow~ Chào mừng đến UsVerse! 💕"',
+            '"Mở 2 cửa sổ hoặc nối Cloud để nhắn tin 2 máy nhé!"',
+            '"Ai làm nửa kia dỗi sẽ bị ghi vào Sổ Đen đấy!"'
+        ];
+        let pIdx = 0, cIdx = 0, isDel = false;
+        function typeLoop() {
+            const cur = phrases[pIdx];
+            const el = document.getElementById('typewriter-text');
+            if (el) {
+                el.innerText = cur.substring(0, cIdx);
+                if (!isDel && cIdx < cur.length) { cIdx++; setTimeout(typeLoop, 45); }
+                else if (isDel && cIdx > 0) { cIdx--; setTimeout(typeLoop, 20); }
+                else { isDel = !isDel; if (!isDel) pIdx = (pIdx + 1) % phrases.length; setTimeout(typeLoop, isDel ? 2000 : 300); }
+            }
+        }
+
+        // Xóa sạch hoàn toàn badge / drawer "Powered by Netlify"
+        function killNetlifyElements() {
+            try {
+                document.querySelectorAll('#netlify-drawer, [data-netlify-drawer], [class*="netlify"], [id*="netlify"], iframe[src*="netlify"], a[href*="netlify.com"]').forEach(el => el.remove());
+                // Quét toàn bộ body tìm element chứa text "Netlify" hoặc "Powered by"
+                document.querySelectorAll('body *').forEach(el => {
+                    const txt = (el.textContent || '').trim();
+                    if (txt && (txt.includes('Powered by') || txt.includes('Netlify')) && el.children.length <= 2 && txt.length < 50) {
+                        el.remove();
+                    }
+                });
+            } catch(e) {}
+        }
+        setInterval(killNetlifyElements, 300);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            killNetlifyElements();
+
+            // 1. Kiểm tra đăng nhập TRƯỚC — nếu chưa login → hiện màn đăng nhập, không render app
+            if (!sessionLoggedIn) {
+                logoutAccount();
+            } else {
+                // 2. Chỉ render giao diện app khi đã đăng nhập
+                renderAll();
+                switchTab('home');
+            }
+
+            // 3. Hiệu ứng typewriter (chạy ở màn đăng nhập lẫn trong app)
+            typeLoop();
+
+            // 4. Đồng bộ cloud + recovery (chạy nền, không ảnh hưởng UI)
+            pullFromCloud();
+            tryDeepRecovery();
+            runAutoBackup();
+        });
+    </script>
+</body>
+
+</html>

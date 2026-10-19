@@ -1,0 +1,218 @@
+/* ===== UsVerse — CSS Styles ===== */
+
+:root {
+    --spring-easing: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --smooth-easing: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 50% 0%, #1f122b 0%, #090b10 85%);
+    color: #f8fafc;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+}
+
+.text-shimmer {
+    background: linear-gradient(90deg, #ffffff 0%, #fda4af 25%, #fef08a 50%, #fda4af 75%, #ffffff 100%);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+    to {
+        background-position: 200% center;
+    }
+}
+
+.hover-lift {
+    transition: transform 0.28s var(--spring-easing), box-shadow 0.25s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 10px 20px -6px rgba(244, 63, 94, 0.22);
+}
+
+.hover-lift:active {
+    transform: translateY(0px) scale(0.96);
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.96);
+}
+
+.marquee-container {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.marquee-track {
+    display: inline-block;
+    animation: marquee 15s linear infinite;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes floatSpring {
+
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-6px) rotate(1.5deg);
+    }
+}
+
+.animate-float {
+    animation: floatSpring 3s ease-in-out infinite;
+}
+
+.spin-slow {
+    animation: spin 7s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.masonry-grid {
+    column-count: 2;
+    column-gap: 10px;
+}
+
+.masonry-item {
+    break-inside: avoid;
+    margin-bottom: 10px;
+}
+
+.scrim-backdrop {
+    background: rgba(9, 11, 16, 0.65);
+    backdrop-filter: blur(6px);
+    transition: opacity 0.25s ease;
+}
+
+.bottom-sheet {
+    transition: transform 0.35s var(--spring-easing);
+}
+
+.side-drawer {
+    transition: transform 0.3s var(--smooth-easing);
+}
+
+.typing-dot {
+    animation: typingBounce 1.2s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+
+    0%,
+    80%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+
+    40% {
+        transform: translateY(-4px);
+        opacity: 1;
+    }
+}
+
+.mirror-video {
+    transform: scaleX(-1);
+}
+
+.falling-heart {
+    position: absolute;
+    top: -20px;
+    pointer-events: none;
+    animation: fallDown 2.8s linear forwards;
+    z-index: 80;
+}
+
+@keyframes fallDown {
+    0% {
+        transform: translateY(0) rotate(0deg) scale(0.8);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(760px) rotate(360deg) scale(1.2);
+        opacity: 0;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #fda4af;
+    border-radius: 10px;
+}
+
+/* Ẩn triệt để thanh/nút "Powered by Netlify", HUD iframe và Netlify drawer */
+iframe,
+iframe[title*="Netlify" i],
+iframe[title*="Powered by" i],
+iframe[src*="netlify" i],
+iframe[srcdoc*="Netlify" i],
+iframe[srcdoc*="nl-" i],
+iframe[style*="2147483645"],
+#netlify-drawer,
+[data-netlify-drawer],
+[class*="netlify-drawer"],
+[id*="netlify"],
+div:has(> iframe) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -99999px !important;
+    top: -99999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    z-index: -99999999 !important;
+}
